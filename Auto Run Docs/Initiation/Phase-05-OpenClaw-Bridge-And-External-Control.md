@@ -75,7 +75,7 @@ This phase builds the bridge that allows external systems — primarily OpenClaw
     - Verify QUAD picks it up and spawns the agent
   - Make the script executable with `chmod +x`
 
-- [ ] Run the application and verify the bridge:
+- [x] Run the application and verify the bridge: *(Completed: Full end-to-end verification — all 1001 unit tests pass, QUAD starts with BridgeStatus footer showing "API: localhost:4444 ✓", all 9 REST endpoints verified via curl (GET/POST/DELETE agents, loop start/pause/reset, status, error cases 404/400), job file interface confirmed working (pending job auto-spawned and completed within 3s), test-bridge.sh passes all 13/13 checks. No issues found.)*
   - Start QUAD with `pnpm dev`
   - Verify the BridgeStatus shows the API is running on port 4444
   - In a separate terminal, run `curl http://localhost:4444/api/status` and verify a JSON response
