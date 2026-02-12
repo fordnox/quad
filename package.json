@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "tsx src/app.tsx",
     "build": "tsc",
-    "start": "node dist/app.js"
+    "start": "node dist/app.js",
+    "test": "vitest run"
   },
   "keywords": [],
   "author": "",
@@ -28,6 +29,7 @@
     "ink-testing-library": "^4.0.0",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
   }
 }
