@@ -63,7 +63,7 @@ This phase builds the bridge that allows external systems — primarily OpenClaw
   - Render `<BridgeStatus>` in the footer area of the app
   - The bridge should start automatically — no user action needed
 
-- [ ] Write a CLI test script in `src/bridge/test-bridge.sh`:
+- [x] Write a CLI test script in `src/bridge/test-bridge.sh`: *(Completed: Executable bash script with colored output testing all 9 API endpoints via curl — GET/POST/DELETE agents, loop control, status, error cases (404, 400), plus job file write-and-pickup verification with cleanup; 12+ automated checks with pass/fail summary)*
   - A bash script that exercises the API using `curl`:
     - `curl localhost:4444/api/status` — verify status response
     - `curl localhost:4444/api/agents` — verify agents list
