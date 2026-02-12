@@ -22,7 +22,7 @@ This phase transforms QUAD from a static demo into an interactive TUI where user
   - On `Escape`, cancel and close the form
   - Use `ink-text-input` (install it as a dependency) for text entry fields
 
-- [ ] Implement a focus system and keybindings in `src/hooks/useFocus.ts` and update `App.tsx`:
+- [x] Implement a focus system and keybindings in `src/hooks/useFocus.ts` and update `App.tsx`:
   - `useFocus.ts`:
     - Track `focusedAgentId: string | null` — which agent card is highlighted
     - Track `detailMode: boolean` — whether the focused agent is expanded to full screen

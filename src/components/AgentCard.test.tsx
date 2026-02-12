@@ -138,4 +138,28 @@ describe('AgentCard', () => {
     // The dot character should be present
     expect(lastFrame()).toContain('●');
   });
+
+  it('shows focus indicator when focused', () => {
+    const agent = makeState({ config: makeConfig({ name: 'Focused Agent' }) });
+    const { lastFrame } = render(<AgentCard agent={agent} width={50} height={15} focused />);
+    const frame = lastFrame()!;
+    expect(frame).toContain('▶');
+    expect(frame).toContain('Focused Agent');
+  });
+
+  it('uses bold border style when focused', () => {
+    const agent = makeState();
+    const { lastFrame } = render(<AgentCard agent={agent} width={50} height={15} focused />);
+    const frame = lastFrame()!;
+    // Bold border uses ┏ and ┓ for top corners (not ╭ and ╮)
+    expect(frame).not.toContain('╭');
+  });
+
+  it('does not show focus indicator when not focused', () => {
+    const agent = makeState({ config: makeConfig({ name: 'Normal Agent' }) });
+    const { lastFrame } = render(<AgentCard agent={agent} width={50} height={15} focused={false} />);
+    const frame = lastFrame()!;
+    expect(frame).not.toContain('▶');
+    expect(frame).toContain('Normal Agent');
+  });
 });

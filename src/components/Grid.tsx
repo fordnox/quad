@@ -6,6 +6,8 @@ import type { AgentState, AgentStatus } from '../types/agent.js';
 
 export interface GridProps {
   agents: AgentState[];
+  focusedAgentId?: string | null;
+  detailMode?: boolean;
 }
 
 const statusLabels: AgentStatus[] = ['running', 'idle', 'finished', 'error'];
@@ -25,7 +27,7 @@ function buildStatusSummary(agents: AgentState[]): string {
   return parts.join(', ');
 }
 
-export function Grid({ agents }: GridProps) {
+export function Grid({ agents, focusedAgentId = null, detailMode = false }: GridProps) {
   const termWidth = process.stdout.columns || 80;
   const termHeight = process.stdout.rows || 24;
 
@@ -52,6 +54,7 @@ export function Grid({ agents }: GridProps) {
             agent={agent}
             width={cardWidth}
             height={cardHeight}
+            focused={agent.config.id === focusedAgentId}
           />
         ))}
       </Box>
@@ -59,7 +62,7 @@ export function Grid({ agents }: GridProps) {
       {/* Footer bar */}
       <Box paddingX={1}>
         <Text dimColor>
-          {chalk.bold('[q]')} quit  {chalk.bold('[a]')} add agent  {chalk.bold('[k]')} kill focused
+          {chalk.bold('[q]')} quit  {chalk.bold('[a]')} add agent  {chalk.bold('[Tab]')} focus  {chalk.bold('[Enter]')} detail  {chalk.bold('[k]')} kill focused  {chalk.bold('[r]')} restart
         </Text>
       </Box>
     </Box>

@@ -1,7 +1,9 @@
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback, useState } from 'react';
 import { useApp, useInput, useStdin } from 'ink';
 import { Grid } from './Grid.js';
+import { AddAgentForm } from './AddAgentForm.js';
 import { useAgentProcess } from '../hooks/useAgentProcess.js';
+import { useFocus } from '../hooks/useFocus.js';
 import { useAgentRegistry } from '../store/AgentRegistryProvider.js';
 import type { AgentConfig, AgentState } from '../types/agent.js';
 
@@ -27,10 +29,11 @@ const demoConfigs: AgentConfig[] = [
 interface AgentRunnerProps {
   config: AgentConfig;
   onState: (state: AgentState) => void;
+  killSignal?: number;
 }
 
-function AgentRunner({ config, onState }: AgentRunnerProps) {
-  const { output, status, pid, run } = useAgentProcess(config);
+function AgentRunner({ config, onState, killSignal }: AgentRunnerProps) {
+  const { output, status, pid, run, kill } = useAgentProcess(config);
   const startedAtRef = useRef<Date | null>(null);
 
   useEffect(() => {
@@ -56,13 +59,24 @@ function AgentRunner({ config, onState }: AgentRunnerProps) {
     });
   }, [config, status, output, pid, onState]);
 
+  // Handle external kill signals
+  useEffect(() => {
+    if (killSignal && killSignal > 0) {
+      kill();
+    }
+  }, [killSignal, kill]);
+
   return null;
 }
 
 export function App() {
   const { exit } = useApp();
   const { isRawModeSupported } = useStdin();
-  const { agents, addAgent, updateAgent } = useAgentRegistry();
+  const { agents, addAgent, updateAgent, removeAgent } = useAgentRegistry();
+  const { focusedAgentId, detailMode, focusNext, focusPrev, toggleDetail, clearFocus } = useFocus();
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [killSignals, setKillSignals] = useState<Record<string, number>>({});
+  const [runnerConfigs, setRunnerConfigs] = useState<AgentConfig[]>([]);
 
   // Register demo agents on mount
   const initializedRef = useRef(false);
@@ -71,6 +85,7 @@ export function App() {
       initializedRef.current = true;
       for (const config of demoConfigs) {
         addAgent(config);
+        setRunnerConfigs((prev) => [...prev, config]);
       }
     }
   }, [addAgent]);
@@ -86,18 +101,120 @@ export function App() {
     });
   }, [updateAgent]);
 
-  useInput((input) => {
+  const handleAddAgent = useCallback((config: AgentConfig) => {
+    addAgent(config);
+    setRunnerConfigs((prev) => [...prev, config]);
+    setShowAddForm(false);
+  }, [addAgent]);
+
+  const handleCancelAdd = useCallback(() => {
+    setShowAddForm(false);
+  }, []);
+
+  const handleKillAgent = useCallback((agentId: string) => {
+    setKillSignals((prev) => ({ ...prev, [agentId]: (prev[agentId] ?? 0) + 1 }));
+  }, []);
+
+  const handleRestartAgent = useCallback((agentId: string) => {
+    // Find the config for this agent
+    const agent = agents.find((a) => a.config.id === agentId);
+    if (!agent) return;
+
+    // Kill the current process
+    handleKillAgent(agentId);
+
+    // Remove old runner and agent, then re-add with a new runner
+    const oldConfig = agent.config;
+    const newConfig: AgentConfig = { ...oldConfig, id: `${oldConfig.id}-${Date.now()}` };
+
+    // Small delay to let the kill propagate, then add the restarted agent
+    setTimeout(() => {
+      removeAgent(agentId);
+      setRunnerConfigs((prev) => prev.filter((c) => c.id !== agentId));
+      addAgent(newConfig);
+      setRunnerConfigs((prev) => [...prev, newConfig]);
+    }, 100);
+  }, [agents, handleKillAgent, removeAgent, addAgent]);
+
+  const agentIds = agents.map((a) => a.config.id);
+
+  useInput((input, key) => {
+    // When the add form is open, don't process other keybindings
+    if (showAddForm) return;
+
     if (input === 'q') {
       exit();
+      return;
     }
-  }, { isActive: isRawModeSupported === true });
+
+    if (input === 'a') {
+      setShowAddForm(true);
+      return;
+    }
+
+    if (key.tab) {
+      if (key.shift) {
+        focusPrev(agentIds);
+      } else {
+        focusNext(agentIds);
+      }
+      return;
+    }
+
+    if (key.return && focusedAgentId) {
+      toggleDetail();
+      return;
+    }
+
+    if (key.escape) {
+      if (detailMode) {
+        toggleDetail();
+      } else {
+        clearFocus();
+      }
+      return;
+    }
+
+    if (input === 'k' && focusedAgentId) {
+      handleKillAgent(focusedAgentId);
+      return;
+    }
+
+    if (input === 'r' && focusedAgentId) {
+      handleRestartAgent(focusedAgentId);
+      return;
+    }
+  }, { isActive: isRawModeSupported === true && !showAddForm });
+
+  const nextId = String(agents.length + 1);
+
+  if (showAddForm) {
+    return (
+      <>
+        {runnerConfigs.map((config) => (
+          <AgentRunner
+            key={config.id}
+            config={config}
+            onState={handleAgentState}
+            killSignal={killSignals[config.id]}
+          />
+        ))}
+        <AddAgentForm onSubmit={handleAddAgent} onCancel={handleCancelAdd} nextId={nextId} />
+      </>
+    );
+  }
 
   return (
     <>
-      {demoConfigs.map((config) => (
-        <AgentRunner key={config.id} config={config} onState={handleAgentState} />
+      {runnerConfigs.map((config) => (
+        <AgentRunner
+          key={config.id}
+          config={config}
+          onState={handleAgentState}
+          killSignal={killSignals[config.id]}
+        />
       ))}
-      <Grid agents={agents} />
+      <Grid agents={agents} focusedAgentId={focusedAgentId} detailMode={detailMode} />
     </>
   );
 }

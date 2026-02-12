@@ -94,8 +94,12 @@ describe('Grid', () => {
     expect(frame).toContain('quit');
     expect(frame).toContain('[a]');
     expect(frame).toContain('add agent');
+    expect(frame).toContain('[Tab]');
+    expect(frame).toContain('focus');
     expect(frame).toContain('[k]');
     expect(frame).toContain('kill focused');
+    expect(frame).toContain('[r]');
+    expect(frame).toContain('restart');
   });
 
   it('renders without errors for empty agents array', () => {
@@ -131,6 +135,28 @@ describe('Grid', () => {
     expect(frame).toContain('2 running');
     expect(frame).toContain('1 idle');
     expect(frame).toContain('1 finished');
+  });
+
+  it('passes focused prop to the matching AgentCard', () => {
+    const agents = [
+      makeState({ config: makeConfig({ id: 'a1', name: 'Alpha' }) }),
+      makeState({ config: makeConfig({ id: 'a2', name: 'Beta' }) }),
+    ];
+    const { lastFrame } = render(<Grid agents={agents} focusedAgentId="a1" />);
+    const frame = lastFrame()!;
+    // Focused agent should show focus indicator
+    expect(frame).toContain('▶');
+    expect(frame).toContain('Alpha');
+    expect(frame).toContain('Beta');
+  });
+
+  it('renders without focus indicator when focusedAgentId is null', () => {
+    const agents = [
+      makeState({ config: makeConfig({ id: 'a1', name: 'Alpha' }) }),
+    ];
+    const { lastFrame } = render(<Grid agents={agents} focusedAgentId={null} />);
+    const frame = lastFrame()!;
+    expect(frame).not.toContain('▶');
   });
 
   it('uses agent config id as key (no duplicate key warnings)', () => {

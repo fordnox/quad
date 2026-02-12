@@ -8,6 +8,7 @@ export interface AgentCardProps {
   agent: AgentState;
   width?: number;
   height?: number;
+  focused?: boolean;
 }
 
 const borderColorMap: Record<AgentStatus, string> = {
@@ -45,13 +46,14 @@ function formatElapsed(startedAt: Date | null): string {
   return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 }
 
-export function AgentCard({ agent, width, height }: AgentCardProps) {
+export function AgentCard({ agent, width, height, focused = false }: AgentCardProps) {
   const { config, status, phase, output, pid, startedAt } = agent;
 
   const cardWidth = width ?? Math.floor((process.stdout.columns || 80) / 2);
   const cardHeight = height ?? Math.floor((process.stdout.rows || 24) / 2);
 
-  const borderColor = borderColorMap[status];
+  const borderColor = focused ? 'yellow' : borderColorMap[status];
+  const borderStyle = focused ? 'bold' : 'round';
 
   const typeBadge = (typeBadgeColor[config.type] ?? chalk.white)(`[${config.type}]`);
   const roleBadge = (roleBadgeColor[config.role] ?? chalk.white)(`[${config.role}]`);
@@ -74,7 +76,7 @@ export function AgentCard({ agent, width, height }: AgentCardProps) {
   return (
     <Box
       flexDirection="column"
-      borderStyle="round"
+      borderStyle={borderStyle}
       borderColor={borderColor}
       width={cardWidth}
       height={cardHeight}
@@ -82,7 +84,7 @@ export function AgentCard({ agent, width, height }: AgentCardProps) {
     >
       {/* Header */}
       <Box justifyContent="space-between">
-        <Text bold>{config.name}</Text>
+        <Text bold>{focused ? chalk.yellow('▶ ') : ''}{focused ? chalk.bold(config.name) : config.name}</Text>
         <Text>
           {typeBadge} {roleBadge}
         </Text>
