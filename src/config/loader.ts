@@ -3,6 +3,7 @@ import path from 'node:path';
 import os from 'node:os';
 import type { QuadConfig, ThemeName, LoopConfig } from './schema.js';
 import { DEFAULT_CONFIG } from './schema.js';
+import { addLogEntry } from '../store/eventLog.js';
 
 /** Resolve `~` to the user's home directory. */
 function expandHome(filePath: string): string {
@@ -142,6 +143,7 @@ export function loadConfig(configPath?: string): QuadConfig {
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       process.stderr.write(`[quad-config] Failed to parse config at ${filePath}: ${msg}\n`);
+      addLogEntry('error', 'config', `Failed to parse config: ${msg}`);
       return { ...DEFAULT_CONFIG, jobFilePath: expandHome(DEFAULT_CONFIG.jobFilePath) };
     }
   }
@@ -150,6 +152,7 @@ export function loadConfig(configPath?: string): QuadConfig {
   if (errors.length > 0) {
     for (const err of errors) {
       process.stderr.write(`[quad-config] Validation warning: ${err}\n`);
+      addLogEntry('warn', 'config', `Validation warning: ${err}`);
     }
   }
 
@@ -157,6 +160,8 @@ export function loadConfig(configPath?: string): QuadConfig {
 
   // Resolve ~ in jobFilePath
   merged.jobFilePath = expandHome(merged.jobFilePath);
+
+  addLogEntry('info', 'config', `Configuration loaded from ${filePath}`);
 
   return merged;
 }

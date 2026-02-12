@@ -5,6 +5,7 @@ import type { ApiBridge, ApiServerHandle, ApiStatusResponse } from '../bridge/ap
 import { createApiServer, DEFAULT_API_PORT } from '../bridge/apiServer.js';
 import type { JobEntry, JobFileWatcher } from '../bridge/jobFile.js';
 import { DEFAULT_JOB_FILE_PATH, initJobFile, readJobFile, watchJobFile, writeJobFile } from '../bridge/jobFile.js';
+import { addLogEntry } from '../store/eventLog.js';
 
 /** Result returned by the useBridge hook. */
 export interface UseBridgeResult {
@@ -66,6 +67,8 @@ export function useBridge(deps: UseBridgeDeps): UseBridgeResult {
     );
 
     if (pendingJobs.length === 0) return;
+
+    addLogEntry('info', 'bridge', `Job file changed: ${pendingJobs.length} new pending job(s)`);
 
     const updatedJobs = [...jobs];
 

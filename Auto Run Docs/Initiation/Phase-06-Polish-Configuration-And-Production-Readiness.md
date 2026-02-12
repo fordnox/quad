@@ -55,7 +55,7 @@ This phase transforms QUAD from a functional prototype into a polished, configur
   - Add a global error boundary component that catches React render errors and shows a fallback UI instead of crashing the entire TUI
   > Completed: Added `performShutdown()` to App.tsx with SIGINT/SIGTERM/uncaughtException handlers that kill all running agents and call `exit()`. Added `autoRestart` option to `useAgentProcess` with 3s delay, max 3 restarts, and restart count tracking. Added `restartCount` field to `AgentState` type. AgentCard shows `(restarted N/3 times)` when restartCount > 0. Created `ErrorBoundary` class component wrapping the app in `cli.tsx` with fallback UI on render errors. Added `ErrorBoundary.test.tsx` (5 tests), `GracefulShutdown.test.tsx` (4 tests), and `useAgentProcess.autoRestart.test.tsx` (7 tests). All 1152 tests pass.
 
-- [ ] Add a notification and event log system:
+- [x] Add a notification and event log system:
   - Create `src/store/eventLog.ts`:
     - A simple circular buffer (last 100 events)
     - `LogEntry` interface: `{ timestamp: Date, level: 'info' | 'warn' | 'error', source: string, message: string }`
@@ -72,6 +72,7 @@ This phase transforms QUAD from a functional prototype into a polished, configur
     - Job file changes detected
     - Configuration loaded
     - Errors and warnings
+  > Completed: Created `eventLog.ts` (circular buffer with 100-entry cap, LogEntry interface, addLogEntry/getRecentLogs/clearLogs/onLogEntry/getLogCount) and `EventLog.tsx` (toggleable panel with `e` key, color-coded INF/WRN/ERR levels, Up/Down scrolling, timestamp+source+message display). Integrated logging across App.tsx (agent start/stop/crash/restart, loop events, shutdown, uncaught exceptions), apiServer.ts (API requests), useBridge.ts (job file changes), and loader.ts (config loaded/errors/warnings). Added `eventLog.test.ts` (11 tests) and `EventLog.test.tsx` (7 tests). All 1186 tests pass.
 
 - [ ] Apply visual polish and theming:
   - Create `src/utils/theme.ts`:

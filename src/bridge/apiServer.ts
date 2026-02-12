@@ -1,6 +1,7 @@
 import http from 'node:http';
 import type { AgentConfig, AgentState, LoopPhase } from '../types/agent.js';
 import type { LoopState, LoopStatus } from '../engine/loopStateMachine.js';
+import { addLogEntry } from '../store/eventLog.js';
 
 /** Sanitized agent state for API responses (no process handles, Dates serialized). */
 export interface ApiAgentState {
@@ -278,6 +279,7 @@ export function createApiServer(bridge: ApiBridge, port?: number): Promise<ApiSe
       process.stderr.write(
         `[quad-api] ${req.method} ${req.url} (request #${handle.requestCount})\n`,
       );
+      addLogEntry('info', 'api', `${req.method} ${req.url}`);
       await handleRequest(req, res, bridge);
     });
 

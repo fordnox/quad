@@ -6,12 +6,15 @@ import { LoopStatusBar } from './LoopStatusBar.js';
 import { PhaseTransitionBanner } from './PhaseTransitionBanner.js';
 import { AddAgentForm } from './AddAgentForm.js';
 import { BridgeStatus } from './BridgeStatus.js';
+import { EventLog } from './EventLog.js';
 import { useAgentProcess } from '../hooks/useAgentProcess.js';
 import { useLoop } from '../hooks/useLoop.js';
+import type { LoopEvent } from '../hooks/useLoop.js';
 import { useFocus } from '../hooks/useFocus.js';
 import { useBridge } from '../hooks/useBridge.js';
 import { useAgentRegistry } from '../store/AgentRegistryProvider.js';
 import { useConfig } from '../config/ConfigProvider.js';
+import { addLogEntry } from '../store/eventLog.js';
 import type { AgentConfig, AgentState } from '../types/agent.js';
 import { demoConfigs } from '../utils/demoAgents.js';
 
@@ -77,11 +80,45 @@ export function App({ noApi = false, noBridge = false, demo = false }: AppProps 
   const { agents, addAgent, updateAgent, removeAgent } = useAgentRegistry();
   const { focusedAgentId, detailMode, focusNext, focusPrev, toggleDetail, clearFocus, setFocus } = useFocus();
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showEventLog, setShowEventLog] = useState(false);
   const [killSignals, setKillSignals] = useState<Record<string, number>>({});
   const [runnerConfigs, setRunnerConfigs] = useState<AgentConfig[]>([]);
   const config = useConfig();
 
   const { loopState, assignments, startLoop, pauseLoop, resumeLoop, resetLoop, onLoopEvent, offLoopEvent } = useLoop(agents);
+
+  // Log loop events
+  useEffect(() => {
+    const handleLoopEvent = (event: LoopEvent) => {
+      switch (event.type) {
+        case 'loop-started':
+          addLogEntry('info', 'system', 'Loop started');
+          break;
+        case 'loop-paused':
+          addLogEntry('info', 'system', 'Loop paused');
+          break;
+        case 'loop-resumed':
+          addLogEntry('info', 'system', 'Loop resumed');
+          break;
+        case 'loop-reset':
+          addLogEntry('info', 'system', 'Loop reset');
+          break;
+        case 'phase-advance':
+          addLogEntry('info', 'system', `Phase: ${event.from} → ${event.to}${event.skipped.length > 0 ? ` (skipped: ${event.skipped.join(', ')})` : ''}`);
+          break;
+        case 'phase-fail':
+          addLogEntry('error', 'system', `Phase "${event.phase}" failed${event.errorAgentId ? ` (agent: ${event.errorAgentId})` : ''}`);
+          break;
+        case 'cycle-complete':
+          addLogEntry('info', 'system', `Cycle ${event.cycleCount} complete`);
+          break;
+      }
+    };
+    onLoopEvent(handleLoopEvent);
+    return () => {
+      offLoopEvent(handleLoopEvent);
+    };
+  }, [onLoopEvent, offLoopEvent]);
 
   const handleBridgeAgentAdded = useCallback((config: AgentConfig) => {
     setRunnerConfigs((prev) => [...prev, config]);
@@ -104,6 +141,8 @@ export function App({ noApi = false, noBridge = false, demo = false }: AppProps 
 
   // Graceful shutdown: kill all running child processes and exit cleanly
   const performShutdown = useCallback(() => {
+    addLogEntry('info', 'system', 'Shutting down — killing all running agents');
+
     // Send kill signals to all running agents
     setKillSignals((prev) => {
       const next = { ...prev };
@@ -129,6 +168,7 @@ export function App({ noApi = false, noBridge = false, demo = false }: AppProps 
 
     const handleUncaughtException = (err: Error) => {
       process.stderr.write(`[quad] Uncaught exception: ${err.message}\n${err.stack ?? ''}\n`);
+      addLogEntry('error', 'system', `Uncaught exception: ${err.message}`);
       performShutdown();
     };
 
@@ -155,7 +195,34 @@ export function App({ noApi = false, noBridge = false, demo = false }: AppProps 
     }
   }, [addAgent, demo]);
 
+  // Track previous agent statuses for transition logging
+  const prevAgentStatusRef = useRef<Record<string, { status: string; restartCount: number }>>({});
+
   const handleAgentState = useCallback((state: AgentState) => {
+    const prev = prevAgentStatusRef.current[state.config.id];
+    const name = state.config.name;
+
+    // Log agent status transitions
+    if (!prev || prev.status !== state.status) {
+      if (state.status === 'running') {
+        addLogEntry('info', name, 'Agent started');
+      } else if (state.status === 'finished') {
+        addLogEntry('info', name, 'Agent finished');
+      } else if (state.status === 'error') {
+        addLogEntry('error', name, `Agent crashed: ${state.error ?? 'unknown error'}`);
+      }
+    }
+
+    // Log restarts
+    if (prev && state.restartCount > prev.restartCount) {
+      addLogEntry('warn', name, `Agent restarting (${state.restartCount}/3)`);
+    }
+
+    prevAgentStatusRef.current[state.config.id] = {
+      status: state.status,
+      restartCount: state.restartCount,
+    };
+
     updateAgent(state.config.id, {
       status: state.status,
       phase: state.phase,
@@ -221,6 +288,11 @@ export function App({ noApi = false, noBridge = false, demo = false }: AppProps 
 
     if (input === 'a') {
       setShowAddForm(true);
+      return;
+    }
+
+    if (input === 'e') {
+      setShowEventLog((prev) => !prev);
       return;
     }
 
@@ -323,6 +395,7 @@ export function App({ noApi = false, noBridge = false, demo = false }: AppProps 
         </Box>
       )}
       <BridgeStatus apiPort={apiPort} jobFilePath={jobFilePath} apiRequestCount={apiRequestCount} />
+      <EventLog visible={showEventLog} />
     </>
   );
 }
