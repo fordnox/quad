@@ -4,7 +4,7 @@ This phase builds the bridge that allows external systems — primarily OpenClaw
 
 ## Tasks
 
-- [ ] Create the job file schema and watcher in `src/bridge/jobFile.ts`:
+- [x] Create the job file schema and watcher in `src/bridge/jobFile.ts`: *(Completed: JobFile/JobEntry interfaces, initJobFile, readJobFile, writeJobFile, watchJobFile with 1s polling — 19 tests passing)*
   - Define a `JobFile` interface:
     - `version: string` (e.g., `"1.0"`)
     - `jobs: JobEntry[]`
