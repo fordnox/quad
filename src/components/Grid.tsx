@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Text } from 'ink';
 import chalk from 'chalk';
 import { AgentCard } from './AgentCard.js';
+import { DetailView } from './DetailView.js';
 import type { AgentState, AgentStatus } from '../types/agent.js';
 
 export interface GridProps {
@@ -36,11 +37,21 @@ export function Grid({ agents, focusedAgentId = null, detailMode = false }: Grid
 
   const summary = buildStatusSummary(agents);
 
+  // Find the focused agent for detail mode
+  const focusedAgent = focusedAgentId
+    ? agents.find((a) => a.config.id === focusedAgentId)
+    : undefined;
+
+  // Render DetailView when in detail mode with a valid focused agent
+  if (detailMode && focusedAgent) {
+    return <DetailView agent={focusedAgent} />;
+  }
+
   return (
     <Box flexDirection="column" width={termWidth}>
       {/* Header bar */}
       <Box justifyContent="space-between" paddingX={1}>
-        <Text bold>{chalk.white('QUAD')}</Text>
+        <Text bold>{chalk.white('QUAD')} {chalk.dim('—')} {chalk.cyan('GRID VIEW')}</Text>
         <Text dimColor>
           {agents.length} agent{agents.length !== 1 ? 's' : ''}{summary ? ` — ${summary}` : ''}
         </Text>

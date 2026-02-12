@@ -171,4 +171,83 @@ describe('Grid', () => {
     expect(frame).toContain('First');
     expect(frame).toContain('Second');
   });
+
+  it('shows GRID VIEW in header when not in detail mode', () => {
+    const { lastFrame } = render(<Grid agents={[]} />);
+    expect(lastFrame()).toContain('GRID VIEW');
+  });
+
+  it('renders DetailView when detailMode is true and focusedAgentId matches an agent', () => {
+    const agents = [
+      makeState({ config: makeConfig({ id: 'a1', name: 'Alpha' }), output: ['line 1', 'line 2'] }),
+      makeState({ config: makeConfig({ id: 'a2', name: 'Beta' }) }),
+    ];
+    const { lastFrame } = render(<Grid agents={agents} focusedAgentId="a1" detailMode={true} />);
+    const frame = lastFrame()!;
+    // DetailView shows DETAIL: header and agent name
+    expect(frame).toContain('DETAIL:');
+    expect(frame).toContain('Alpha');
+    // Should NOT show grid-specific elements
+    expect(frame).not.toContain('GRID VIEW');
+    expect(frame).not.toContain('Beta');
+  });
+
+  it('renders grid view when detailMode is true but focusedAgentId is null', () => {
+    const agents = [
+      makeState({ config: makeConfig({ id: 'a1', name: 'Alpha' }) }),
+    ];
+    const { lastFrame } = render(<Grid agents={agents} focusedAgentId={null} detailMode={true} />);
+    const frame = lastFrame()!;
+    expect(frame).toContain('GRID VIEW');
+    expect(frame).toContain('Alpha');
+  });
+
+  it('renders grid view when detailMode is true but focusedAgentId does not match any agent', () => {
+    const agents = [
+      makeState({ config: makeConfig({ id: 'a1', name: 'Alpha' }) }),
+    ];
+    const { lastFrame } = render(<Grid agents={agents} focusedAgentId="nonexistent" detailMode={true} />);
+    const frame = lastFrame()!;
+    expect(frame).toContain('GRID VIEW');
+    expect(frame).toContain('Alpha');
+  });
+
+  it('shows detail footer hints when in detail mode', () => {
+    const agents = [
+      makeState({ config: makeConfig({ id: 'a1', name: 'Alpha' }) }),
+    ];
+    const { lastFrame } = render(<Grid agents={agents} focusedAgentId="a1" detailMode={true} />);
+    const frame = lastFrame()!;
+    expect(frame).toContain('[Escape]');
+    expect(frame).toContain('back to grid');
+    expect(frame).toContain('[k]');
+    expect(frame).toContain('[r]');
+  });
+
+  it('shows grid footer hints when in grid mode', () => {
+    const agents = [
+      makeState({ config: makeConfig({ id: 'a1', name: 'Alpha' }) }),
+    ];
+    const { lastFrame } = render(<Grid agents={agents} focusedAgentId={null} detailMode={false} />);
+    const frame = lastFrame()!;
+    expect(frame).toContain('[q]');
+    expect(frame).toContain('[a]');
+    expect(frame).toContain('[Tab]');
+    expect(frame).toContain('[Enter]');
+  });
+
+  it('renders DetailView with agent output when in detail mode', () => {
+    const agents = [
+      makeState({
+        config: makeConfig({ id: 'a1', name: 'OutputAgent' }),
+        output: ['Hello from agent', 'Processing task'],
+        status: 'running',
+      }),
+    ];
+    const { lastFrame } = render(<Grid agents={agents} focusedAgentId="a1" detailMode={true} />);
+    const frame = lastFrame()!;
+    expect(frame).toContain('Hello from agent');
+    expect(frame).toContain('Processing task');
+    expect(frame).toContain('OutputAgent');
+  });
 });

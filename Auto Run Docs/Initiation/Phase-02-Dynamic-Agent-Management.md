@@ -53,7 +53,8 @@ This phase transforms QUAD from a static demo into an interactive TUI where user
   - Show a small `▶` or `*` indicator next to the agent name when focused
   - Animate the border or status indicator subtly to draw the eye (e.g., use `chalk.bold` on the name)
 
-- [ ] Update `Grid.tsx` to conditionally render `DetailView` vs the grid:
+- [x] Update `Grid.tsx` to conditionally render `DetailView` vs the grid:
+  - **Completed**: Grid now imports DetailView and conditionally renders it when `detailMode=true` and a valid `focusedAgentId` matches an agent. Header shows `GRID VIEW` in grid mode; DetailView's own header shows `DETAIL: [Agent Name]`. Footer shows grid keybindings in grid mode and DetailView shows its own `[Escape] back to grid  [k] kill  [r] restart` footer. 7 new tests added (21 total Grid tests), all 127 tests passing.
   - If `detailMode` is true and a `focusedAgentId` exists, render `<DetailView>` for that agent instead of the grid
   - Otherwise, render the normal grid of `<AgentCard>` components
   - Update the header bar to show the current mode: `GRID VIEW` or `DETAIL: [Agent Name]`
