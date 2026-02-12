@@ -34,9 +34,9 @@ describe('App Integration: Interactive Features', () => {
 
     // Initially no focus indicator
     let frame = lastFrame()!;
-    expect(frame).toContain('Planner');
-    expect(frame).toContain('Coder');
-    expect(frame).toContain('Auditor');
+    expect(frame).toContain('Claude Agent');
+    expect(frame).toContain('OpenCode Agent');
+    expect(frame).toContain('Git Push');
 
     // Press Tab to focus first agent
     stdin.write(KEYS.TAB);
@@ -119,9 +119,9 @@ describe('App Integration: Interactive Features', () => {
     frame = lastFrame()!;
     expect(frame).toContain('GRID VIEW');
     // Should still show all agents
-    expect(frame).toContain('Planner');
-    expect(frame).toContain('Coder');
-    expect(frame).toContain('Auditor');
+    expect(frame).toContain('Claude Agent');
+    expect(frame).toContain('OpenCode Agent');
+    expect(frame).toContain('Git Push');
 
     unmount();
   });
@@ -343,9 +343,9 @@ describe('App Integration: Interactive Features', () => {
 
     const frame = lastFrame()!;
     expect(frame).toContain('DETAIL:');
-    expect(frame).toContain('Planner');
-    // Should show output from the planner agent
-    expect(frame).toMatch(/Plan \d+\/5/);
+    expect(frame).toContain('Claude Agent');
+    // Claude demo agent produces progress lines like "[1/6]", "[2/6]", etc.
+    expect(frame).toMatch(/\d+\/6/);
 
     unmount();
   });

@@ -10,33 +10,7 @@ import { useLoop } from '../hooks/useLoop.js';
 import { useFocus } from '../hooks/useFocus.js';
 import { useAgentRegistry } from '../store/AgentRegistryProvider.js';
 import type { AgentConfig, AgentState } from '../types/agent.js';
-
-const demoConfigs: AgentConfig[] = [
-  {
-    id: 'demo-planner',
-    name: 'Planner',
-    type: 'custom',
-    role: 'planner',
-    command: 'bash -c \'for i in $(seq 1 5); do echo "[Plan $i/5] Analyzing requirements... $(date +%H:%M:%S)"; sleep 1; done; echo "Planning complete."\'',
-    args: [],
-  },
-  {
-    id: 'demo-coder',
-    name: 'Coder',
-    type: 'custom',
-    role: 'coder',
-    command: 'bash -c \'for i in $(seq 1 6); do echo "[Code $i/6] Writing code... $(date +%H:%M:%S)"; sleep 1; done; echo "Coding complete."\'',
-    args: [],
-  },
-  {
-    id: 'demo-auditor',
-    name: 'Auditor',
-    type: 'custom',
-    role: 'auditor',
-    command: 'bash -c \'for i in $(seq 1 4); do echo "[Audit $i/4] Checking files... $((RANDOM % 100 + 1)) files scanned"; sleep 1; done; echo "Audit complete."\'',
-    args: [],
-  },
-];
+import { demoConfigs } from '../utils/demoAgents.js';
 
 interface AgentRunnerProps {
   config: AgentConfig;

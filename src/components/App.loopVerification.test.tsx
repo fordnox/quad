@@ -49,7 +49,7 @@ describe('Loop Engine Verification', () => {
     const { lastFrame, stdin, unmount } = renderApp();
 
     // Wait for agents to be registered but before they finish
-    // The planner runs for ~5s, coder ~6s, auditor ~4s
+    // OpenCode (planner) ~4.2s, Claude (coder) ~4.8s, Git Push (reviewer/audit) ~5.4s
     await wait(500);
 
     // Start the loop
@@ -202,7 +202,7 @@ describe('Loop Engine Verification', () => {
   it('loop advances through all phases when agents finish quickly', async () => {
     const { lastFrame, stdin, unmount } = renderApp();
 
-    // Wait for ALL demo agents to finish (planner: 5s, coder: 6s, auditor: 4s)
+    // Wait for ALL demo agents to finish (OpenCode/planner: ~4.2s, Claude/coder: ~4.8s, GitPush/audit: ~5.4s)
     // Wait 7s to ensure all have finished before starting the loop
     await wait(7500);
 

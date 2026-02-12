@@ -37,9 +37,9 @@ describe('App', () => {
     await wait(1500);
 
     const frame = lastFrame()!;
-    expect(frame).toContain('Planner');
-    expect(frame).toContain('Coder');
-    expect(frame).toContain('Auditor');
+    expect(frame).toContain('Claude Agent');
+    expect(frame).toContain('OpenCode Agent');
+    expect(frame).toContain('Git Push');
     unmount();
   });
 
@@ -81,8 +81,8 @@ describe('App', () => {
     await wait(2500);
 
     const frame = lastFrame()!;
-    // Planner agent produces "[Plan X/5]" lines
-    expect(frame).toMatch(/Plan \d+\/5/);
+    // Claude demo agent produces progress lines like "[1/6]", "[2/6]", etc.
+    expect(frame).toMatch(/\d+\/6/);
     unmount();
   });
 

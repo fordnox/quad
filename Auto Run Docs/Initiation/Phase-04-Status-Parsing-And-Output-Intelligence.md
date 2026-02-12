@@ -63,7 +63,7 @@ This phase adds intelligent output parsing so QUAD can extract meaningful status
     - Show the parsed `summary` as a sidebar or overlay next to raw output
     - Filter buttons: show all, errors only, commands only (toggle with `1`, `2`, `3` keys)
 
-- [ ] Create demo agents that showcase the parsing in `src/utils/demoAgents.ts`:
+- [x] Create demo agents that showcase the parsing in `src/utils/demoAgents.ts`: *(completed: `buildScript` utility generates bash commands with proper shell escaping; three rich demo scripts — Claude-like with thinking/planning/tool usage/file edits/progress/error patterns, OpenCode-like with gpt-4 model/token/cost tracking plus code changes, and Git Push with realistic git add/commit/push flow + test runner output; demos use agent types `claude`/`opencode`/`custom` to exercise the correct parser pipelines; `App.tsx` now imports from `demoAgents.ts` — 29 new tests + all 926 tests passing across 43 files)*
   - Extract demo agent configurations into a dedicated utility file
   - Create richer demo scripts that produce output mimicking real agent patterns:
     - A "Claude-like" demo that outputs: thinking indicators, file edits, command executions, and progress markers
