@@ -44,7 +44,7 @@ This phase builds the bridge that allows external systems — primarily OpenClaw
   - Add basic error handling: 404 for unknown routes, 400 for bad payloads, 500 for internal errors
   - Log API requests to a debug line visible in the TUI footer or a dedicated log area
 
-- [ ] Create a `useBridge` hook in `src/hooks/useBridge.ts`:
+- [x] Create a `useBridge` hook in `src/hooks/useBridge.ts`: *(Completed: UseBridgeDeps interface for dependency injection, ApiBridge wiring via refs for latest state, job file watcher with auto-spawn for pending jobs, agent completion tracking to update job statuses, API server lifecycle management with cleanup on unmount — 15 tests passing)*
   - Starts both the job file watcher and the API server on mount
   - Connects incoming job file changes to the agent registry:
     - New `pending` jobs → auto-spawn agent, update job status to `accepted`
