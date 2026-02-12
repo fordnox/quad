@@ -25,7 +25,7 @@ This phase sets up the entire project from scratch — TypeScript, pnpm, Ink (Re
     - `src/types/` — TypeScript type definitions
     - `src/utils/` — utility functions
 
-- [ ] Create the core type definitions in `src/types/agent.ts`:
+- [x] Create the core type definitions in `src/types/agent.ts`:
   - `AgentType` — union type: `'claude' | 'opencode' | 'custom'`
   - `AgentStatus` — union type: `'idle' | 'running' | 'finished' | 'error'`
   - `LoopPhase` — union type: `'plan' | 'code' | 'audit' | 'push' | 'idle'`
