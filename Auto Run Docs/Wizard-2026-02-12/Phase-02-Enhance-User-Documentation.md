@@ -18,10 +18,11 @@ This phase adds visual polish and helpful context to the README, making it more 
   - Include tips on creating custom agents with different commands
   <!-- Completed: Added comprehensive "Understanding Agents" section to README.md between "The Loop" and "Configuration" sections. Includes: AgentConfig TypeScript interface with all 6 fields documented, Agent Types table mapping types to parsers, Agent Roles table with loop phase mapping and purpose descriptions, Agent Statuses table, demo agent modification example showing how to change roles in demoConfigs, and a full "Creating Custom Agents" subsection with defaultAgents config.json example (3 agents: Claude coder, ESLint auditor, test runner reviewer) plus 5 practical tips on type selection, role matching, shell commands, args usage, and HTTP API agent creation. All 1298 existing tests pass. -->
 
-- [ ] Add keyboard shortcuts and controls section:
+- [x] Add keyboard shortcuts and controls section:
   - Document the 'q' key to quit the application
   - Explain any other interactive features
   - Add notes about terminal compatibility and requirements
+  <!-- Completed: Enhanced the Keyboard Controls section in README.md: fixed Detail View keybindings to match actual code (keys 1/2/3 for filter modes instead of incorrect 'f', added PageUp/PageDown for page scrolling), added Event Log Panel scrolling subsection, added Global section documenting Ctrl+C force quit. Added comprehensive "Terminal Compatibility" section covering raw mode requirements, ANSI escape code support, minimum terminal size recommendations, Unicode rendering needs, and a platform-specific recommended terminals table (macOS, Linux, Windows). All 1298 existing tests pass. -->
 
 - [ ] Create a FAQ or Common Issues section:
   - Address potential platform-specific issues (macOS, Linux, Windows)

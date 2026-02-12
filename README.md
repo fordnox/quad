@@ -247,9 +247,20 @@ Quad displays a 2×2 grid of agent cards, a loop status bar showing the current 
 
 | Key | Action |
 |-----|--------|
-| `f` | Cycle output filter (all / errors / commands) |
-| `↑` / `↓` | Scroll output history |
+| `↑` / `↓` | Scroll output up / down one line |
+| `PageUp` / `PageDown` | Scroll output up / down one full page |
+| `1` | Show all output (default filter) |
+| `2` | Show errors only |
+| `3` | Show commands only |
 | `Esc` | Return to grid view |
+
+#### Event Log Panel
+
+When the event log is open (toggled with `e`):
+
+| Key | Action |
+|-----|--------|
+| `↑` / `↓` | Scroll through event history |
 
 #### Add Agent Form
 
@@ -259,6 +270,12 @@ Use `↑`/`↓` to navigate options and `Enter` to confirm. `Esc` cancels at any
 2. **Role** — `coder`, `auditor`, `planner`, or `reviewer`
 3. **Name** — free-text (defaults to `Agent-N`)
 4. **Command** — shell command (custom type only)
+
+#### Global
+
+| Key | Action |
+|-----|--------|
+| `Ctrl+C` | Force quit (sends SIGINT — kills all agents and exits) |
 
 ### The Loop
 
@@ -422,6 +439,25 @@ Quad creates a default config at `~/.quad/config.json` on first run. Key options
 **Job File** (`~/.quad/jobs.json`): External systems can add agents by writing job entries with `status: "pending"`. Quad picks them up automatically.
 
 Disable either with `--no-api` or `--no-bridge`.
+
+### Terminal Compatibility
+
+Quad is built on [Ink](https://github.com/vadimdemedes/ink) (React for CLIs) and requires a terminal that supports:
+
+- **Raw mode** — needed for keyboard input. Quad checks for raw mode support on startup; if unavailable, keyboard shortcuts won't work. Most modern terminals support this (iTerm2, Terminal.app, GNOME Terminal, Windows Terminal, Alacritty, Kitty, etc.). Piped or non-interactive shells (e.g. `node dist/index.js | tee log.txt`) do not support raw mode.
+- **ANSI escape codes** — used for colors, box drawing, and cursor control. 256-color support is recommended. Terminals with limited color support will still work but may render with reduced styling.
+- **Minimum size** — Quad defaults to 80×24 when terminal dimensions can't be detected. For the best experience, use a terminal window at least 100 columns wide and 30 rows tall so the 2×2 grid renders comfortably.
+- **Unicode support** — box-drawing characters (`╭╮╰╯─│`), spinners (`⠋⠙⠹⠸`), and status dots (`●`) require Unicode rendering. Most modern terminals handle this natively.
+
+**Platform notes:**
+
+| Platform | Recommended Terminals |
+|----------|----------------------|
+| macOS | iTerm2, Terminal.app, Alacritty, Kitty, Warp |
+| Linux | GNOME Terminal, Alacritty, Kitty, Konsole |
+| Windows | Windows Terminal, Git Bash (via mintty). CMD and PowerShell ISE have limited ANSI support. |
+
+> **Tip:** If the layout looks compressed or garbled, try resizing your terminal window or increasing the font size. Quad dynamically reads `process.stdout.columns` and `process.stdout.rows` on each render.
 
 ## Troubleshooting
 
