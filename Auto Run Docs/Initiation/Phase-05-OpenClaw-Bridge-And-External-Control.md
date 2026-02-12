@@ -27,7 +27,7 @@ This phase builds the bridge that allows external systems — primarily OpenClaw
   - Implement `writeJobFile(path: string, jobs: JobEntry[])` — for updating job statuses back to the file
   - Implement `initJobFile(path: string)` — create the file with an empty jobs array if it doesn't exist
 
-- [ ] Create the local HTTP API server in `src/bridge/apiServer.ts`:
+- [x] Create the local HTTP API server in `src/bridge/apiServer.ts`: *(Completed: Full REST API with 9 endpoints using Node.js built-in http module, ApiBridge interface for state access, sanitized JSON responses, request logging, configurable port via QUAD_API_PORT env var — 26 tests passing)*
   - Use Node.js built-in `http` module (no Express needed — keep dependencies light)
   - Listen on `localhost:4444` by default (configurable via `QUAD_API_PORT` env var)
   - Implement REST endpoints:
