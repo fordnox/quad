@@ -38,7 +38,7 @@ This phase implements the heart of QUAD: the continuous **Plan → Code → Audi
   - When any agent in the current phase reaches `error` status, trigger `onPhaseFail`
   - Emits phase-transition events that the UI can react to (e.g., update the phase indicator)
 
-- [ ] Create a `LoopStatusBar` component in `src/components/LoopStatusBar.tsx`:
+- [x] Create a `LoopStatusBar` component in `src/components/LoopStatusBar.tsx`:
   - A horizontal bar rendered at the top of the app (above the grid) that visualizes the loop:
     - Show all four phases as labeled segments: `[PLAN] → [CODE] → [AUDIT] → [PUSH]`
     - Highlight the current phase with a bright color and bold text
