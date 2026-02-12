@@ -4,7 +4,7 @@ This phase transforms QUAD from a functional prototype into a polished, configur
 
 ## Tasks
 
-- [ ] Create a configuration system in `src/config/`:
+- [x] Create a configuration system in `src/config/`:
   - `src/config/schema.ts`:
     - Define a `QuadConfig` interface covering all configurable options:
       - `apiPort: number` (default: 4444)
@@ -22,6 +22,7 @@ This phase transforms QUAD from a functional prototype into a polished, configur
     - Export `loadConfig(): QuadConfig` and `saveConfig(config: QuadConfig): void`
     - Create `~/.quad/` directory and default `config.json` on first run if missing
   - Create a React context `ConfigProvider` that makes the config available to all components
+  > Completed: Created `schema.ts` (QuadConfig interface + DEFAULT_CONFIG), `loader.ts` (loadConfig/saveConfig with deep merge, validation, ~ expansion, auto-init of ~/.quad/), `ConfigProvider.tsx` (React context + useConfig hook), and `loader.test.ts` (12 tests covering defaults, merging, deep merge, invalid JSON, round-trip, ~ expansion). All 1013 tests pass.
 
 - [ ] Create a proper CLI entry point in `src/cli.ts`:
   - Parse command-line arguments using a minimal argument parser (no external dependency — use `process.argv` slicing):
