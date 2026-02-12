@@ -233,7 +233,7 @@ describe('useBridge integration', () => {
 
       const bridge = {
         getStatus: () => ({
-          status: deps.loopState.status as const,
+          status: deps.loopState.status,
           currentPhase: deps.loopState.currentPhase,
           cycleCount: 0,
           agentCount: 0,

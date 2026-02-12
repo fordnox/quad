@@ -210,11 +210,11 @@ export function useBridge(deps: UseBridgeDeps): UseBridgeResult {
       const agent = agents.find((a) => a.config.id === agentId);
       if (!agent) return job;
 
-      if (agent.status === 'finished' && job.status !== 'completed') {
+      if (agent.status === 'finished') {
         needsWrite = true;
         return { ...job, status: 'completed' as const };
       }
-      if (agent.status === 'error' && job.status !== 'failed') {
+      if (agent.status === 'error') {
         needsWrite = true;
         return { ...job, status: 'failed' as const };
       }

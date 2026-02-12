@@ -107,7 +107,7 @@ This phase transforms QUAD from a functional prototype into a polished, configur
   - Add a `"test": "node --test --loader tsx 'src/**/*.test.ts'"` script to package.json
   > Completed: All four test files already existed from earlier phases (using vitest, the project's established test framework). Audited each against task requirements and added 30 new tests: `loopStateMachine.test.ts` (32 total — added immutability checks, invalid state transitions, edge case for idle→running, multi-cycle wrap, phase results reset), `claudeParser.test.ts` (59 total — added OSC ANSI stripping, progress edge cases 0%/100%/large numbers, Write/WebFetch/Glob/Task tool detection, multi-pattern priority), `outputParser.test.ts` (11 total — added parser isolation verification, timestamp on fallback, single parser behavior, empty input), `loader.test.ts` (15 total — added invalid apiPort type, unknown fields, absolute path preservation). Test script `"test": "vitest run"` was already in package.json. All 1268 tests pass across 69 test files.
 
-- [ ] Run all tests and perform a final integration check:
+- [x] Run all tests and perform a final integration check:
   - Run `pnpm test` and fix any failing tests
   - Run `pnpm build` and verify TypeScript compiles without errors
   - Run `pnpm dev` (which now runs `--demo` mode) and verify:
@@ -119,3 +119,4 @@ This phase transforms QUAD from a functional prototype into a polished, configur
     - `q` exits cleanly with all processes killed
   - Run `node dist/cli.js --help` to verify the built CLI works
   - Fix any issues encountered during this verification
+  > Completed: Fixed 3 TypeScript compilation errors: (1) `apiServer.test.ts` — changed `body: unknown` to `body: any` in mockReqRes return type to allow property access on parsed JSON, (2) `useBridge.ts` — removed redundant `job.status !== 'completed'`/`'failed'` guards that TS correctly flagged as always-true after the `'accepted' | 'running'` filter, (3) `useBridge.test.ts` — removed invalid `as const` assertion on a non-literal property access. All 1298 tests pass across 69 test files. `pnpm build` compiles cleanly. `node dist/cli.js --help` and `--version` both work. `pnpm dev` (demo mode) verified: splash screen displays, 3 demo agents start in the grid with live output/progress bars, loop status bar shows phase progression, keyboard shortcuts displayed, bridge status shown.

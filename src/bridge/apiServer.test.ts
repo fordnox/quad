@@ -62,7 +62,7 @@ function mockReqRes(
   method: string,
   url: string,
   body?: string,
-): { req: http.IncomingMessage; res: http.ServerResponse; getResponse: () => { statusCode: number; body: unknown } } {
+): { req: http.IncomingMessage; res: http.ServerResponse; getResponse: () => { statusCode: number; body: any } } {
   // Create a fake readable stream for the request
   const { Readable } = require('node:stream');
   const readable = new Readable({ read() {} });
