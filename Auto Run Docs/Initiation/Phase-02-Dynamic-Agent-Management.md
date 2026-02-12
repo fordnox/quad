@@ -11,7 +11,7 @@ This phase transforms QUAD from a static demo into an interactive TUI where user
   - Export a `useAgentRegistry()` hook that returns the registry state and dispatch functions
   - Refactor `App.tsx` to use this registry instead of local state for managing agents
 
-- [ ] Create an `AddAgentForm` component in `src/components/AddAgentForm.tsx`:
+- [x] Create an `AddAgentForm` component in `src/components/AddAgentForm.tsx`:
   - A modal-style overlay (Ink `<Box>` with absolute-like positioning using `flexDirection="column"` centered in the viewport)
   - Present a simple form flow:
     - Step 1: Choose agent type with arrow-key selection: `claude` (runs `claude`), `opencode` (runs `opencode`), `custom` (user enters command)
