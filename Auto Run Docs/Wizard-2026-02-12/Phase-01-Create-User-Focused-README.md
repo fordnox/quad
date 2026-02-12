@@ -19,6 +19,7 @@ This phase creates a comprehensive README.md file that explains how to install, 
   - Confirm the app launches and displays the agent grid properly
   <!-- Verified 2026-02-12: All commands work. pnpm install succeeds, pnpm run dev launches TUI with splash screen and 3 demo agents in grid, pnpm run build compiles cleanly, production mode (node dist/cli.js) runs correctly both with --demo and without. All 1298 tests pass across 69 test files. -->
 
-- [ ] Add a Quick Start section at the top of README for users who want to jump right in:
+- [x] Add a Quick Start section at the top of README for users who want to jump right in:
   - One-liner or minimal command sequence to get from clone to running
   - Reference to detailed sections for more information
+  <!-- Verified 2026-02-12: Quick Start section already exists at the top of README.md (lines 7-15), placed immediately after the project description. Contains a 3-command clone→install→run sequence and references to detailed "Running the Application" and "Usage Instructions" sections. No changes needed. -->
