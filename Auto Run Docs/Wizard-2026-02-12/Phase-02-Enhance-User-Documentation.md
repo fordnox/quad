@@ -24,8 +24,9 @@ This phase adds visual polish and helpful context to the README, making it more 
   - Add notes about terminal compatibility and requirements
   <!-- Completed: Enhanced the Keyboard Controls section in README.md: fixed Detail View keybindings to match actual code (keys 1/2/3 for filter modes instead of incorrect 'f', added PageUp/PageDown for page scrolling), added Event Log Panel scrolling subsection, added Global section documenting Ctrl+C force quit. Added comprehensive "Terminal Compatibility" section covering raw mode requirements, ANSI escape code support, minimum terminal size recommendations, Unicode rendering needs, and a platform-specific recommended terminals table (macOS, Linux, Windows). All 1298 existing tests pass. -->
 
-- [ ] Create a FAQ or Common Issues section:
+- [x] Create a FAQ or Common Issues section:
   - Address potential platform-specific issues (macOS, Linux, Windows)
   - Solutions for common errors (port conflicts, missing dependencies, etc.)
   - Tips for running in different terminal emulators
   - How to stop long-running agents
+  <!-- Completed: Replaced the basic Troubleshooting section with a comprehensive "FAQ & Common Issues" section in README.md. Organized into 7 subsections: Installation & Setup (4 issues), Port Conflicts & Networking (3 issues including EADDRINUSE fix commands for macOS/Linux/Windows, env var docs), Agents (6 issues including spawn ENOENT, auto-restart behavior, max agent limit, stopping long-running agents), Terminal & Display (4 issues covering raw mode, layout, colors, Unicode), Platform-Specific Issues (macOS/Linux/Windows with actionable fixes for each), and Configuration (3 issues including config reset). All 1298 existing tests pass. -->

@@ -459,22 +459,116 @@ Quad is built on [Ink](https://github.com/vadimdemedes/ink) (React for CLIs) and
 
 > **Tip:** If the layout looks compressed or garbled, try resizing your terminal window or increasing the font size. Quad dynamically reads `process.stdout.columns` and `process.stdout.rows` on each render.
 
-## Troubleshooting
+## FAQ & Common Issues
+
+### Installation & Setup
 
 **`pnpm: command not found`**
-Enable corepack: `corepack enable` (requires Node.js >= 16.13). Or install globally: `npm install -g pnpm`.
+Enable corepack (bundled with Node.js >= 16.13): `corepack enable`. Alternatively, install pnpm globally: `npm install -g pnpm`. On macOS you can also `brew install pnpm`.
 
 **`ERR_MODULE_NOT_FOUND` on start**
-Run `pnpm run build` first. The `pnpm start` command runs the compiled output in `dist/`.
+Run `pnpm run build` first. The `pnpm start` command runs compiled output from `dist/`, which doesn't exist until you build.
 
-**Port already in use**
-Another process is using port 4444. Use `--port <number>` to pick a different port, or `--no-api` to disable the API server.
+**`Unknown flag` error on startup**
+Quad exits with an error for any unrecognized CLI flag. Double-check your command — valid flags are `--demo`, `--port <number>`, `--no-api`, `--no-bridge`, `--config <path>`, `--help`, and `--version`.
+
+**Config file parse errors (`[quad-config] Failed to parse config`)**
+Your `~/.quad/config.json` contains invalid JSON. Fix the syntax error, or delete the file and Quad will recreate it with defaults on next launch.
+
+### Port Conflicts & Networking
+
+**`EADDRINUSE` / Port already in use**
+Another process is using port 4444 (the default API port). You have three options:
+- Use a different port: `quad --port 8080`
+- Disable the API server entirely: `quad --no-api`
+- Find and kill the conflicting process:
+  ```bash
+  # macOS / Linux
+  lsof -ti:4444 | xargs kill
+  # Windows
+  netstat -ano | findstr :4444
+  taskkill /PID <pid> /F
+  ```
+
+**API server not reachable from other machines**
+By design, Quad's API server binds to `127.0.0.1` (localhost only). It is not accessible from the network. If you need remote access, set up a reverse proxy or SSH tunnel.
+
+**Can I change the API port via environment variable?**
+Yes. Set `QUAD_API_PORT=<number>` in your environment. CLI flags (`--port`) take precedence over the environment variable, which takes precedence over the config file.
+
+### Agents
 
 **No agents appear on launch**
-In production mode (`pnpm start`), no agents are loaded by default. Press `a` to add one interactively, configure `defaultAgents` in `~/.quad/config.json`, or use `--demo` for demo agents.
+In production mode (`pnpm start`), no agents are loaded by default. Either:
+- Press `a` to add one interactively
+- Add entries to `defaultAgents` in `~/.quad/config.json`
+- Launch in demo mode: `quad --demo`
 
 **Agent stuck in "running" state**
-Press `k` to kill the agent's process, then `r` to restart it. Agents auto-restart up to 3 times on crash.
+Press `k` to kill the agent's process. The agent will stop and its status changes to `finished`. Press `r` to restart it if needed.
 
-**Terminal rendering issues**
-Quad requires a terminal with ANSI color support. Ensure your terminal emulator supports 256 colors. Resize the terminal if the layout looks compressed.
+**Agent keeps crashing and restarting**
+Agents auto-restart up to 3 times with a 3-second delay between attempts. If the underlying command is broken (wrong path, missing binary, bad arguments), you'll see repeated restart messages. Press `k` to stop the restart cycle, fix the command, then press `r` to restart cleanly.
+
+**"Error: spawn … ENOENT" in agent output**
+The command configured for the agent was not found. Verify that the binary exists and is in your `PATH`. For example, if your agent runs `claude`, make sure the Claude CLI is installed and accessible from the shell Quad uses.
+
+**How do I stop a long-running agent?**
+Focus the agent with `Tab` and press `k` to send `SIGTERM`. If the process doesn't respond, press `Ctrl+C` to force-quit Quad entirely (this kills all agent processes). On shutdown, Quad sends `SIGTERM` to every running child process.
+
+**Maximum agent limit reached**
+Quad defaults to 8 concurrent agents (`maxAgents` in config). If you hit this limit, remove idle agents or increase the limit in `~/.quad/config.json`.
+
+### Terminal & Display
+
+**Keyboard shortcuts don't work**
+Quad requires terminal raw mode for key input. Raw mode is unavailable when:
+- Output is piped (e.g. `quad | tee log.txt`)
+- Running in a non-interactive shell or CI environment
+- The terminal emulator doesn't support raw mode
+
+Use a standard interactive terminal like iTerm2, GNOME Terminal, or Windows Terminal.
+
+**Layout looks garbled or compressed**
+- Resize your terminal to at least **100 columns × 30 rows**
+- Quad falls back to 80×24 when it can't detect terminal dimensions, which may not be enough for comfortable 2×2 grid rendering
+- If box-drawing characters (`╭╮╰╯─│`) display as `?` or rectangles, your terminal or font doesn't support Unicode — try a font like JetBrains Mono, Fira Code, or Nerd Font variants
+
+**Colors look wrong or missing**
+Quad uses 256-color ANSI codes. If your terminal shows raw escape sequences or no colors:
+- **Windows CMD / PowerShell ISE**: these have limited ANSI support — use Windows Terminal instead
+- **macOS Terminal.app**: works but iTerm2 provides richer color support
+- **tmux/screen**: ensure `TERM` is set to `xterm-256color` or similar (e.g. `export TERM=xterm-256color`)
+- **SSH sessions**: make sure your SSH client forwards color support; try `ssh -t` for a proper TTY
+
+**Spinner characters display as boxes or question marks**
+The braille spinner (`⠋⠙⠹⠸`) and status dots (`●`) require Unicode. Ensure your terminal uses a UTF-8 locale (`locale` should show `UTF-8`) and a Unicode-capable font.
+
+### Platform-Specific Issues
+
+**macOS**
+- If `corepack enable` fails, you may need `sudo corepack enable` or install pnpm via Homebrew
+- Terminal.app works but has limited 256-color rendering; iTerm2 or Alacritty is recommended
+- On Apple Silicon, ensure you're using an ARM-native Node.js build for best performance
+
+**Linux**
+- Some minimal distributions may not include Node.js >= 18 in their default repos — use [nvm](https://github.com/nvm-sh/nvm) or [NodeSource packages](https://github.com/nodesource/distributions)
+- Wayland-based terminals generally work fine; if you experience rendering issues, check that your `TERM` environment variable is set correctly
+- Running in a Docker container requires an interactive TTY: `docker run -it ...`
+
+**Windows**
+- Use **Windows Terminal** for full compatibility — CMD and PowerShell ISE have limited ANSI escape code support
+- Git Bash (mintty) works well for both running Quad and spawning agents
+- If agents fail to spawn, check that the agent's binary is on your Windows `PATH` (not just WSL's `PATH`)
+- WSL2 works fully — run Quad inside WSL and use Windows Terminal as the frontend
+
+### Configuration
+
+**Where is the config file?**
+`~/.quad/config.json` — Quad creates this directory and a default config on first run. Use `--config <path>` to load from a different location.
+
+**Config validation warnings on startup**
+Quad logs warnings like `[quad-config] Validation warning: apiPort must be a number between 1 and 65535` when config values have incorrect types. Fix the offending value in your config file. Quad will still start using defaults for invalid fields.
+
+**How do I reset config to defaults?**
+Delete `~/.quad/config.json` and restart Quad. A fresh default config will be created automatically.
