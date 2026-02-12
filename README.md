@@ -14,6 +14,128 @@ pnpm run dev
 
 This launches Quad in demo mode with simulated agents so you can explore the interface immediately. See [Running the Application](#running-the-application) and [Usage Instructions](#usage-instructions) for details.
 
+## What You'll See
+
+When you launch Quad, you'll see a 2×2 grid of agent cards, each showing real-time output from an AI agent or shell command. Here's what the dashboard looks like with demo agents running:
+
+```
+┌─ QUAD — GRID VIEW ─── 3 agents (1 running, 1 idle, 1 finished) ────────────┐
+│                                                                              │
+│  ╭─ Claude Agent ──────────────────╮  ╭─ OpenCode Agent ───────────────────╮ │
+│  │ Claude Agent    [claude] [coder]│  │ OpenCode Agent [opencode] [planner]│ │
+│  │ ⠋ [CODE]          ▸ CODE       │  │ ● [IDLE]                           │ │
+│  │ ▸ Tool: Edit — src/auth/login.ts│  │ ▸ waiting...                       │ │
+│  │                                 │  │                                    │ │
+│  │ [1/6] Reading src/auth/login.ts │  │ Using model: gpt-4 via openai     │ │
+│  │ Tool: Read — src/auth/login.ts  │  │ Tokens used: 1,245 prompt + 0     │ │
+│  │ [2/6] Editing src/auth/login.ts │  │ Thinking about database schema... │ │
+│  │ Tool: Edit — src/auth/login.ts  │  │ [1/5] Reading src/db/schema.ts    │ │
+│  │                                 │  │                                    │ │
+│  │ [██████████░░░░░░░░░░] 2/6      │  │                                    │ │
+│  │ PID: 48210       Elapsed: 01:42 │  │ PID: ---        Elapsed: --:--    │ │
+│  ╰─────────────────────────────────╯  ╰────────────────────────────────────╯ │
+│  ╭─ Git Push ──────────────────────╮  ╭────────────────────────────────────╮ │
+│  │ Git Push       [custom] [review]│  │                                    │ │
+│  │ ● [IDLE]                        │  │          (empty slot)              │ │
+│  │ ▸ waiting...                    │  │                                    │ │
+│  │                                 │  │                                    │ │
+│  │ $ git add -A                    │  │                                    │ │
+│  │ $ git status                    │  │                                    │ │
+│  │ PASS src/auth/login.test.ts     │  │                                    │ │
+│  │ 14 passed, 0 failed, 0 skipped │  │                                    │ │
+│  │                                 │  │                                    │ │
+│  │ PID: 48212       Elapsed: 00:47 │  │                                    │ │
+│  ╰─────────────────────────────────╯  ╰────────────────────────────────────╯ │
+│                                                                              │
+├─ ✓ PLAN → [CODE] → audit → push ─── Cycle #1 ── RUNNING ───────────────────┤
+│ [q] quit  [a] add  [Tab] focus  [Enter] detail  [l] loop  [e] events       │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Status Indicators
+
+Each agent card displays a colored status dot and border:
+
+| Indicator | Color | Meaning |
+|-----------|-------|---------|
+| `⠋` (spinner) | Green | **Running** — agent process is active and producing output |
+| `●` | Gray | **Idle** — agent is waiting, not yet started |
+| `●` | Blue | **Finished** — agent completed successfully |
+| `●` | Red | **Error** — agent process failed or crashed |
+
+### Color-Coded Output
+
+Agent output lines are automatically parsed and color-coded by type:
+
+| Output Type | Color | Example |
+|-------------|-------|---------|
+| Error | Red | `Error: SessionValidator is not defined` |
+| Command | Green | `$ npm run test --reporter=verbose` |
+| Code | Blue | `Creating src/auth/session.ts` |
+| Progress | Yellow | `[3/6] Writing src/auth/session.ts` |
+| Status | Cyan | `Thinking about the task requirements...` |
+| Info | White | `Tool: Read — src/auth/login.ts (245 lines)` |
+
+### Agent Type & Role Badges
+
+Each card header shows the agent type and role:
+
+- **Type badges**: `[claude]` (magenta), `[opencode]` (cyan), `[custom]` (yellow)
+- **Role badges**: `[coder]` (green), `[planner]` (yellow), `[auditor]` (blue), `[reviewer]` (cyan)
+
+### Loop Status Bar
+
+The bottom status bar shows the four-phase loop progression:
+
+```
+✓ PLAN → [CODE] → audit → push    Cycle #1    RUNNING
+```
+
+- `✓ PLAN` — phase completed successfully (green check)
+- `[CODE]` — currently active phase (bold, highlighted)
+- `audit` / `push` — pending phases (dimmed)
+- `✗ PHASE` — phase that failed (red)
+
+### Demo Agent Output
+
+Running `pnpm run dev` spawns three demo agents with scripted output:
+
+**Claude Agent** (type: `claude`, role: `coder`) — Simulates a Claude Code session:
+```
+Thinking about the task requirements...
+Planning implementation approach for authentication module
+[1/6] Reading src/auth/login.ts
+Tool: Read — src/auth/login.ts (245 lines)
+[2/6] Editing src/auth/login.ts — adding session validation
+Tool: Edit — src/auth/login.ts (+12 -3 lines)
+[4/6] $ npm run test -- --reporter=verbose
+Error: SessionValidator is not defined in scope
+12 passed, 0 failed
+```
+
+**OpenCode Agent** (type: `opencode`, role: `planner`) — Simulates an OpenCode/GPT session:
+```
+Using model: gpt-4 via openai provider
+Tokens used: 1,245 prompt + 0 completion
+[1/5] Reading src/db/schema.ts
+Creating src/db/migrations/004_add_user_roles.ts
+[3/5] $ pnpm run db:migrate
+Cost: $0.0234 total for this session
+8 passed, 0 failed
+```
+
+**Git Push** (type: `custom`, role: `reviewer`) — Simulates a git workflow:
+```
+$ git add -A
+$ git status
+On branch feature/auth-session
+PASS src/auth/login.test.ts
+PASS src/auth/session.test.ts
+14 passed, 0 failed, 0 skipped
+$ git commit -m "feat: add session-based authentication"
+$ git push origin feature/auth-session
+```
+
 ## Prerequisites
 
 - **Node.js** >= 18 (ES2022 target)
