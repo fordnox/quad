@@ -4,7 +4,7 @@ This phase adds intelligent output parsing so QUAD can extract meaningful status
 
 ## Tasks
 
-- [ ] Create the output parser framework in `src/parsers/outputParser.ts`:
+- [x] Create the output parser framework in `src/parsers/outputParser.ts`: *(completed: `ParsedOutput` interface, `OutputParser` interface, and `ParserPipeline` class with ordered parser matching and unknown-type fallback — 7 tests passing)*
   - Define a `ParsedOutput` interface:
     - `raw: string` — the original line
     - `type: 'status' | 'code' | 'command' | 'error' | 'info' | 'progress' | 'unknown'`
@@ -19,7 +19,7 @@ This phase adds intelligent output parsing so QUAD can extract meaningful status
     - Accepts an ordered array of `OutputParser` instances
     - `parseLine(line: string): ParsedOutput` — tries each parser in order, returns the first match, or falls back to `unknown` type
 
-- [ ] Create a Claude Code output parser in `src/parsers/claudeParser.ts`:
+- [x] Create a Claude Code output parser in `src/parsers/claudeParser.ts`: *(completed: pattern-based parser with priority ordering — detects progress, errors, commands, tool usage, code writing, and status indicators; strips ANSI codes and truncates summaries to ~60 chars — 49 tests passing)*
   - Implement `OutputParser` for Claude Code CLI output patterns
   - Detect and classify patterns such as:
     - Thinking/planning indicators: lines containing "Thinking", "Planning", "Analyzing" → type `status`
