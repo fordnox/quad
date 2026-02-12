@@ -4,6 +4,8 @@ import Spinner from 'ink-spinner';
 import chalk from 'chalk';
 import type { AgentState, AgentStatus } from '../types/agent.js';
 import type { ParsedOutput, ParsedOutputType } from '../parsers/outputParser.js';
+import { useTheme } from '../utils/ThemeProvider.js';
+import type { ThemeColors, ThemeInkColors } from '../utils/theme.js';
 
 export type OutputFilter = 'all' | 'errors' | 'commands';
 
@@ -12,36 +14,48 @@ export interface DetailViewProps {
   isActive?: boolean;
 }
 
-const statusColorMap: Record<AgentStatus, string> = {
-  idle: 'gray',
-  running: 'green',
-  finished: 'blue',
-  error: 'red',
-};
+function getStatusInkColor(status: AgentStatus, ink: ThemeInkColors): string {
+  const map: Record<AgentStatus, string> = {
+    idle: ink.agentIdle,
+    running: ink.agentRunning,
+    finished: ink.agentFinished,
+    error: ink.agentError,
+  };
+  return map[status];
+}
 
-const typeBadgeColor: Record<string, (s: string) => string> = {
-  claude: chalk.magenta,
-  opencode: chalk.cyan,
-  custom: chalk.yellow,
-};
+function getTypeBadge(type: string, t: ThemeColors): string {
+  const map: Record<string, (s: string) => string> = {
+    claude: t.typeClaude,
+    opencode: t.typeOpencode,
+    custom: t.typeCustom,
+  };
+  return (map[type] ?? chalk.white)(`[${type}]`);
+}
 
-const roleBadgeColor: Record<string, (s: string) => string> = {
-  coder: chalk.green,
-  auditor: chalk.blue,
-  planner: chalk.yellow,
-  reviewer: chalk.cyan,
-  custom: chalk.white,
-};
+function getRoleBadge(role: string, t: ThemeColors): string {
+  const map: Record<string, (s: string) => string> = {
+    coder: t.roleCoder,
+    auditor: t.roleAuditor,
+    planner: t.rolePlanner,
+    reviewer: t.roleReviewer,
+    custom: t.roleCustom,
+  };
+  return (map[role] ?? chalk.white)(`[${role}]`);
+}
 
-const outputTypeColorMap: Record<ParsedOutputType, (s: string) => string> = {
-  error: chalk.red,
-  command: chalk.green,
-  code: chalk.blue,
-  progress: chalk.yellow,
-  status: chalk.cyan,
-  info: chalk.white,
-  unknown: chalk.dim,
-};
+function getOutputColor(type: ParsedOutputType, t: ThemeColors): (s: string) => string {
+  const map: Record<ParsedOutputType, (s: string) => string> = {
+    error: t.outputError,
+    command: t.outputCommand,
+    code: t.outputCode,
+    progress: t.outputProgress,
+    status: t.outputStatus,
+    info: t.outputInfo,
+    unknown: t.outputUnknown,
+  };
+  return map[type];
+}
 
 const filterTypeMap: Record<OutputFilter, ParsedOutputType[] | null> = {
   all: null,
@@ -62,8 +76,8 @@ function formatStartTime(startedAt: Date | null): string {
   return startedAt.toLocaleTimeString();
 }
 
-function colorLine(parsed: ParsedOutput): string {
-  const colorFn = outputTypeColorMap[parsed.type];
+function colorLine(parsed: ParsedOutput, t: ThemeColors): string {
+  const colorFn = getOutputColor(parsed.type, t);
   return colorFn(parsed.raw);
 }
 
@@ -76,6 +90,7 @@ function filterParsedOutput(entries: ParsedOutput[], filter: OutputFilter): Pars
 const MAX_VISIBLE_LINES = 200;
 
 export function DetailView({ agent, isActive = true }: DetailViewProps) {
+  const { colors: t, ink } = useTheme();
   const { config, status, phase, output, parsedOutput, currentActivity, pid, startedAt, error } = agent;
   const [scrollOffset, setScrollOffset] = useState(0);
   const [filter, setFilter] = useState<OutputFilter>('all');
@@ -139,17 +154,17 @@ export function DetailView({ agent, isActive = true }: DetailViewProps) {
   const visibleParsed = useParsed ? allParsed.slice(scrollOffset, scrollOffset + outputAreaHeight) : [];
   const visibleRaw = !useParsed ? allRaw.slice(scrollOffset, scrollOffset + outputAreaHeight) : [];
 
-  const typeBadge = (typeBadgeColor[config.type] ?? chalk.white)(`[${config.type}]`);
-  const roleBadge = (roleBadgeColor[config.role] ?? chalk.white)(`[${config.role}]`);
+  const typeBadge = getTypeBadge(config.type, t);
+  const roleBadge = getRoleBadge(config.role, t);
 
   const statusIndicator =
     status === 'running' ? (
-      <Text color="green">
+      <Text color={ink.agentRunning}>
         <Spinner type="dots" />
         {' '}
       </Text>
     ) : (
-      <Text color={statusColorMap[status]}>● </Text>
+      <Text color={getStatusInkColor(status, ink)}>● </Text>
     );
 
   const scrollIndicator = totalLines > outputAreaHeight
@@ -157,23 +172,23 @@ export function DetailView({ agent, isActive = true }: DetailViewProps) {
     : '';
 
   const filterLabel = filter === 'all'
-    ? chalk.bold.white('[ALL]')
+    ? t.hintKey('[ALL]')
     : filter === 'errors'
-      ? chalk.bold.red('[ERRORS]')
-      : chalk.bold.green('[COMMANDS]');
+      ? t.outputError('[ERRORS]')
+      : t.outputCommand('[COMMANDS]');
 
   return (
     <Box flexDirection="column" width={termWidth} height={termHeight}>
       {/* Header bar */}
       <Box justifyContent="space-between" paddingX={1}>
         <Box gap={1}>
-          <Text bold>{chalk.yellow('DETAIL:')}</Text>
+          <Text bold>{t.borderFocused('DETAIL:')}</Text>
           <Text bold>{config.name}</Text>
           <Text>{typeBadge} {roleBadge}</Text>
         </Box>
         <Box gap={1}>
           {statusIndicator}
-          <Text bold color={status === 'running' ? 'green' : status === 'error' ? 'red' : undefined}>
+          <Text bold color={status === 'running' ? ink.agentRunning : status === 'error' ? ink.agentError : undefined}>
             [{phase.toUpperCase()}]
           </Text>
         </Box>
@@ -185,13 +200,13 @@ export function DetailView({ agent, isActive = true }: DetailViewProps) {
         <Text dimColor>Started: {formatStartTime(startedAt)}</Text>
         <Text dimColor>Elapsed: {formatElapsed(startedAt)}</Text>
         <Text dimColor>Status: {status}</Text>
-        {error ? <Text color="red">Error: {error}</Text> : null}
+        {error ? <Text color={ink.agentError}>Error: {error}</Text> : null}
       </Box>
 
       {/* Current activity line */}
       <Box paddingX={1} gap={2}>
         {currentActivity ? (
-          <Text color="cyan" bold>▸ {currentActivity}</Text>
+          <Text color={ink.activity} bold>▸ {currentActivity}</Text>
         ) : (
           <Text dimColor>▸ waiting...</Text>
         )}
@@ -208,7 +223,7 @@ export function DetailView({ agent, isActive = true }: DetailViewProps) {
         {useParsed
           ? visibleParsed.map((parsed, i) => (
               <Box key={scrollOffset + i} gap={1}>
-                <Text>{colorLine(parsed)}</Text>
+                <Text>{colorLine(parsed, t)}</Text>
                 {parsed.summary ? (
                   <Text dimColor> {chalk.italic(`[${parsed.summary}]`)}</Text>
                 ) : null}
@@ -222,10 +237,10 @@ export function DetailView({ agent, isActive = true }: DetailViewProps) {
       {/* Footer hint bar */}
       <Box justifyContent="space-between" paddingX={1}>
         <Text dimColor>
-          {chalk.bold('[Escape]')} back  {chalk.bold('[k]')} kill  {chalk.bold('[r]')} restart  {chalk.bold('[1]')} all  {chalk.bold('[2]')} errors  {chalk.bold('[3]')} commands
+          {t.hintKey('[Escape]')} back  {t.hintKey('[k]')} kill  {t.hintKey('[r]')} restart  {t.hintKey('[1]')} all  {t.hintKey('[2]')} errors  {t.hintKey('[3]')} commands
         </Text>
         <Text dimColor>
-          {chalk.bold('[↑/↓]')} scroll{scrollIndicator}
+          {t.hintKey('[↑/↓]')} scroll{scrollIndicator}
         </Text>
       </Box>
     </Box>

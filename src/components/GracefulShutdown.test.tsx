@@ -4,6 +4,7 @@ import { render } from 'ink-testing-library';
 import { App } from './App.js';
 import { AgentRegistryProvider } from '../store/AgentRegistryProvider.js';
 import { ConfigProvider } from '../config/ConfigProvider.js';
+import { ThemeProvider } from '../utils/ThemeProvider.js';
 import { DEFAULT_CONFIG } from '../config/schema.js';
 
 function wait(ms: number): Promise<void> {
@@ -13,9 +14,11 @@ function wait(ms: number): Promise<void> {
 function renderApp(props?: { demo?: boolean }) {
   return render(
     <ConfigProvider config={DEFAULT_CONFIG}>
-      <AgentRegistryProvider>
-        <App demo={props?.demo} noApi noBridge />
-      </AgentRegistryProvider>
+      <ThemeProvider theme="default">
+        <AgentRegistryProvider>
+          <App demo={props?.demo} noApi noBridge skipSplash />
+        </AgentRegistryProvider>
+      </ThemeProvider>
     </ConfigProvider>,
   );
 }

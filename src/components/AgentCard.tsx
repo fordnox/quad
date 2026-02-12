@@ -4,6 +4,8 @@ import Spinner from 'ink-spinner';
 import chalk from 'chalk';
 import type { AgentState, AgentStatus, LoopPhase } from '../types/agent.js';
 import type { ParsedOutputType } from '../parsers/outputParser.js';
+import { useTheme } from '../utils/ThemeProvider.js';
+import type { ThemeColors, ThemeInkColors } from '../utils/theme.js';
 
 export interface AgentCardProps {
   agent: AgentState;
@@ -14,49 +16,68 @@ export interface AgentCardProps {
   activeInCurrentPhase?: boolean;
 }
 
-const borderColorMap: Record<AgentStatus, string> = {
-  idle: 'gray',
-  running: 'green',
-  finished: 'blue',
-  error: 'red',
-};
+function getBorderColor(status: AgentStatus, focused: boolean, ink: ThemeInkColors): string {
+  if (focused) return ink.borderFocused;
+  const map: Record<AgentStatus, string> = {
+    idle: ink.agentIdle,
+    running: ink.agentRunning,
+    finished: ink.agentFinished,
+    error: ink.agentError,
+  };
+  return map[status];
+}
 
-const statusDotMap: Record<Exclude<AgentStatus, 'running'>, string> = {
-  idle: chalk.gray('●'),
-  finished: chalk.blue('●'),
-  error: chalk.red('●'),
-};
+function getStatusDot(status: Exclude<AgentStatus, 'running'>, t: ThemeColors): string {
+  const map: Record<Exclude<AgentStatus, 'running'>, string> = {
+    idle: t.agentIdle('●'),
+    finished: t.agentFinished('●'),
+    error: t.agentError('●'),
+  };
+  return map[status];
+}
 
-const typeBadgeColor: Record<string, (s: string) => string> = {
-  claude: chalk.magenta,
-  opencode: chalk.cyan,
-  custom: chalk.yellow,
-};
+function getTypeBadge(type: string, t: ThemeColors): string {
+  const map: Record<string, (s: string) => string> = {
+    claude: t.typeClaude,
+    opencode: t.typeOpencode,
+    custom: t.typeCustom,
+  };
+  return (map[type] ?? chalk.white)(`[${type}]`);
+}
 
-const roleBadgeColor: Record<string, (s: string) => string> = {
-  coder: chalk.green,
-  auditor: chalk.blue,
-  planner: chalk.yellow,
-  reviewer: chalk.cyan,
-  custom: chalk.white,
-};
+function getRoleBadge(role: string, t: ThemeColors): string {
+  const map: Record<string, (s: string) => string> = {
+    coder: t.roleCoder,
+    auditor: t.roleAuditor,
+    planner: t.rolePlanner,
+    reviewer: t.roleReviewer,
+    custom: t.roleCustom,
+  };
+  return (map[role] ?? chalk.white)(`[${role}]`);
+}
 
-const phaseColorMap: Record<string, (s: string) => string> = {
-  plan: chalk.yellow,
-  code: chalk.green,
-  audit: chalk.blue,
-  push: chalk.magenta,
-};
+function getPhaseColor(phase: string, t: ThemeColors): (s: string) => string {
+  const map: Record<string, (s: string) => string> = {
+    plan: t.phasePlan,
+    code: t.phaseCode,
+    audit: t.phaseAudit,
+    push: t.phasePush,
+  };
+  return map[phase] ?? chalk.white;
+}
 
-const outputTypeColorMap: Record<ParsedOutputType, (s: string) => string> = {
-  error: chalk.red,
-  command: chalk.green,
-  code: chalk.blue,
-  progress: chalk.yellow,
-  status: chalk.cyan,
-  info: chalk.white,
-  unknown: chalk.dim,
-};
+function getOutputColor(type: ParsedOutputType, t: ThemeColors): (s: string) => string {
+  const map: Record<ParsedOutputType, (s: string) => string> = {
+    error: t.outputError,
+    command: t.outputCommand,
+    code: t.outputCode,
+    progress: t.outputProgress,
+    status: t.outputStatus,
+    info: t.outputInfo,
+    unknown: t.outputUnknown,
+  };
+  return map[type];
+}
 
 function formatElapsed(startedAt: Date | null): string {
   if (!startedAt) return '--:--';
@@ -75,37 +96,38 @@ function renderProgressBar(current: number, total: number, width: number): strin
 }
 
 export function AgentCard({ agent, width, height, focused = false, assignedPhase = null, activeInCurrentPhase = false }: AgentCardProps) {
+  const { colors: t, ink } = useTheme();
   const { config, status, phase, output, parsedOutput, currentActivity, pid, startedAt, restartCount } = agent;
 
   const cardWidth = width ?? Math.floor((process.stdout.columns || 80) / 2);
   const cardHeight = height ?? Math.floor((process.stdout.rows || 24) / 2);
 
-  const borderColor = focused ? 'yellow' : borderColorMap[status];
+  const borderColor = getBorderColor(status, focused, ink);
   const borderStyle = focused ? 'bold' : 'round';
 
-  const typeBadge = (typeBadgeColor[config.type] ?? chalk.white)(`[${config.type}]`);
-  const roleBadge = (roleBadgeColor[config.role] ?? chalk.white)(`[${config.role}]`);
+  const typeBadge = getTypeBadge(config.type, t);
+  const roleBadge = getRoleBadge(config.role, t);
 
   const phaseLabel = `[${phase.toUpperCase()}]`;
 
   // Build the assigned-phase label with active indicator
   let assignedPhaseLabel = '';
   if (assignedPhase) {
-    const colorFn = phaseColorMap[assignedPhase] ?? chalk.white;
+    const colorFn = getPhaseColor(assignedPhase, t);
     if (activeInCurrentPhase) {
       assignedPhaseLabel = colorFn(chalk.bold(`▸ ${assignedPhase.toUpperCase()}`));
     } else {
-      assignedPhaseLabel = chalk.dim(assignedPhase.toUpperCase());
+      assignedPhaseLabel = t.dim(assignedPhase.toUpperCase());
     }
   }
 
   const statusIndicator =
     status === 'running' ? (
-      <Text color="green">
+      <Text color={ink.agentRunning}>
         <Spinner type="dots" />
       </Text>
     ) : (
-      <Text>{statusDotMap[status]}</Text>
+      <Text>{getStatusDot(status, t)}</Text>
     );
 
   // Find the most recent progress entry for the mini progress bar
@@ -131,7 +153,7 @@ export function AgentCard({ agent, width, height, focused = false, assignedPhase
     >
       {/* Header */}
       <Box justifyContent="space-between">
-        <Text bold>{focused ? chalk.yellow('▶ ') : ''}{focused ? chalk.bold(config.name) : config.name}</Text>
+        <Text bold>{focused ? t.borderFocused('▶ ') : ''}{focused ? chalk.bold(config.name) : config.name}</Text>
         <Text>
           {typeBadge} {roleBadge}
         </Text>
@@ -140,17 +162,17 @@ export function AgentCard({ agent, width, height, focused = false, assignedPhase
       {/* Status + Phase */}
       <Box gap={1}>
         {statusIndicator}
-        <Text bold color={status === 'running' ? 'green' : status === 'error' ? 'red' : undefined}>
+        <Text bold color={status === 'running' ? ink.agentRunning : status === 'error' ? ink.agentError : undefined}>
           {phaseLabel}
         </Text>
         {assignedPhaseLabel ? <Text>{assignedPhaseLabel}</Text> : null}
-        {restartCount > 0 ? <Text color="yellow">(restarted {restartCount}/3 times)</Text> : null}
+        {restartCount > 0 ? <Text color={ink.loopPaused}>(restarted {restartCount}/3 times)</Text> : null}
       </Box>
 
       {/* Current Activity */}
       {currentActivity ? (
         <Box>
-          <Text color="cyan" bold wrap="truncate">
+          <Text color={ink.activity} bold wrap="truncate">
             {'▸ '}{currentActivity}
           </Text>
         </Box>
@@ -164,7 +186,7 @@ export function AgentCard({ agent, width, height, focused = false, assignedPhase
       <Box flexDirection="column" flexGrow={1}>
         {useParsed
           ? recentParsed.map((parsed, i) => {
-              const colorFn = outputTypeColorMap[parsed.type];
+              const colorFn = getOutputColor(parsed.type, t);
               return (
                 <Text key={i}>
                   {colorFn(parsed.summary ?? parsed.raw)}
@@ -181,7 +203,7 @@ export function AgentCard({ agent, width, height, focused = false, assignedPhase
       {/* Mini progress bar */}
       {latestProgress?.progress ? (
         <Box>
-          <Text color="yellow">
+          <Text color={ink.loopPaused}>
             {renderProgressBar(latestProgress.progress.current, latestProgress.progress.total, Math.max(10, cardWidth - 4))}
             {' '}{latestProgress.progress.current}/{latestProgress.progress.total}
           </Text>

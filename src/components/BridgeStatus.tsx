@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Text } from 'ink';
-import chalk from 'chalk';
+import { useTheme } from '../utils/ThemeProvider.js';
 
 export interface BridgeStatusProps {
   apiPort: number;
@@ -9,16 +9,18 @@ export interface BridgeStatusProps {
 }
 
 export function BridgeStatus({ apiPort, jobFilePath, apiRequestCount }: BridgeStatusProps) {
+  const { colors: t, ink } = useTheme();
+
   return (
     <Box paddingX={1} gap={2}>
       <Text>
-        {chalk.bold('API:')} <Text color="green">localhost:{apiPort} ✓</Text>
+        {t.hintKey('API:')} <Text color={ink.success}>localhost:{apiPort} ✓</Text>
       </Text>
       <Text>
-        {chalk.bold('Jobs:')} <Text dimColor>{jobFilePath}</Text>
+        {t.hintKey('Jobs:')} <Text dimColor>{jobFilePath}</Text>
       </Text>
       <Text>
-        {chalk.bold('API requests:')} <Text dimColor>{apiRequestCount}</Text>
+        {t.hintKey('API requests:')} <Text dimColor>{apiRequestCount}</Text>
       </Text>
     </Box>
   );

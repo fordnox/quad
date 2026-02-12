@@ -3,6 +3,8 @@ import { Box, Text } from 'ink';
 import chalk from 'chalk';
 import type { LoopEvent, LoopEventListener } from '../hooks/useLoop.js';
 import type { LoopPhase } from '../types/agent.js';
+import { useTheme } from '../utils/ThemeProvider.js';
+import type { ThemeColors } from '../utils/theme.js';
 
 export interface PhaseTransitionBannerProps {
   onLoopEvent: (listener: LoopEventListener) => void;
@@ -16,26 +18,29 @@ interface BannerMessage {
   id: number;
 }
 
-const phaseColors: Record<string, (s: string) => string> = {
-  plan: chalk.yellow,
-  code: chalk.green,
-  audit: chalk.blue,
-  push: chalk.magenta,
-};
+function getPhaseColor(phase: string, t: ThemeColors): (s: string) => string {
+  const map: Record<string, (s: string) => string> = {
+    plan: t.phasePlan,
+    code: t.phaseCode,
+    audit: t.phaseAudit,
+    push: t.phasePush,
+  };
+  return map[phase] ?? chalk.white;
+}
 
-function colorPhase(phase: LoopPhase): string {
-  const colorFn = phaseColors[phase] ?? chalk.white;
+function colorPhase(phase: LoopPhase, t: ThemeColors): string {
+  const colorFn = getPhaseColor(phase, t);
   return colorFn(phase.toUpperCase());
 }
 
-function buildMessage(event: LoopEvent): string | null {
+function buildMessage(event: LoopEvent, t: ThemeColors): string | null {
   switch (event.type) {
     case 'phase-advance':
-      return `→ Entering ${colorPhase(event.to)} phase`;
+      return `→ Entering ${colorPhase(event.to, t)} phase`;
     case 'cycle-complete':
-      return chalk.green(`✓ Cycle #${event.cycleCount} complete`) + ' — restarting loop';
+      return t.success(`✓ Cycle #${event.cycleCount} complete`) + ' — restarting loop';
     case 'phase-fail':
-      return chalk.red(`✗ ${event.phase.toUpperCase()} phase failed`) + ' — loop paused';
+      return t.agentError(`✗ ${event.phase.toUpperCase()} phase failed`) + ' — loop paused';
     default:
       return null;
   }
@@ -48,12 +53,13 @@ export function PhaseTransitionBanner({
   offLoopEvent,
   dismissAfter = 3000,
 }: PhaseTransitionBannerProps) {
+  const { colors: t } = useTheme();
   const [banner, setBanner] = useState<BannerMessage | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleEvent: LoopEventListener = useCallback(
     (event: LoopEvent) => {
-      const text = buildMessage(event);
+      const text = buildMessage(event, t);
       if (text === null) return;
 
       // Clear any existing dismiss timer
@@ -73,7 +79,7 @@ export function PhaseTransitionBanner({
         timerRef.current = null;
       }, dismissAfter);
     },
-    [dismissAfter],
+    [dismissAfter, t],
   );
 
   useEffect(() => {

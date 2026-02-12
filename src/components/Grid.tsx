@@ -1,11 +1,11 @@
 import React from 'react';
 import { Box, Text } from 'ink';
-import chalk from 'chalk';
 import { AgentCard } from './AgentCard.js';
 import { DetailView } from './DetailView.js';
 import type { AgentState, AgentStatus, LoopPhase } from '../types/agent.js';
 import type { LoopState } from '../engine/loopStateMachine.js';
 import type { PhaseAssignments } from '../engine/loopOrchestrator.js';
+import { useTheme } from '../utils/ThemeProvider.js';
 
 export interface GridProps {
   agents: AgentState[];
@@ -44,6 +44,7 @@ function getAgentAssignedPhase(agentId: string, assignments?: PhaseAssignments):
 }
 
 export function Grid({ agents, focusedAgentId = null, detailMode = false, loopState, assignments }: GridProps) {
+  const { colors: t } = useTheme();
   const termWidth = process.stdout.columns || 80;
   const termHeight = process.stdout.rows || 24;
 
@@ -66,7 +67,7 @@ export function Grid({ agents, focusedAgentId = null, detailMode = false, loopSt
     <Box flexDirection="column" width={termWidth}>
       {/* Header bar */}
       <Box justifyContent="space-between" paddingX={1}>
-        <Text bold>{chalk.white('QUAD')} {chalk.dim('—')} {chalk.cyan('GRID VIEW')}</Text>
+        <Text bold>{t.headerTitle('QUAD')} {t.dim('—')} {t.headerView('GRID VIEW')}</Text>
         <Text dimColor>
           {agents.length} agent{agents.length !== 1 ? 's' : ''}{summary ? ` — ${summary}` : ''}
         </Text>
@@ -94,7 +95,7 @@ export function Grid({ agents, focusedAgentId = null, detailMode = false, loopSt
       {/* Footer bar */}
       <Box paddingX={1}>
         <Text dimColor>
-          {chalk.bold('[q]')} quit  {chalk.bold('[a]')} add agent  {chalk.bold('[Tab]')} focus  {chalk.bold('[Enter]')} detail  {chalk.bold('[k]')} kill focused  {chalk.bold('[r]')} restart  {chalk.bold('[l]')} loop  {chalk.bold('[p]')} pause  {chalk.bold('[L]')} reset loop
+          {t.hintKey('[q]')} quit  {t.hintKey('[a]')} add agent  {t.hintKey('[Tab]')} focus  {t.hintKey('[Enter]')} detail  {t.hintKey('[k]')} kill focused  {t.hintKey('[r]')} restart  {t.hintKey('[l]')} loop  {t.hintKey('[p]')} pause  {t.hintKey('[L]')} reset loop
         </Text>
       </Box>
     </Box>

@@ -8,6 +8,7 @@ import { App } from './components/App.js';
 import { ErrorBoundary } from './components/ErrorBoundary.js';
 import { AgentRegistryProvider } from './store/AgentRegistryProvider.js';
 import { ConfigProvider } from './config/ConfigProvider.js';
+import { ThemeProvider } from './utils/ThemeProvider.js';
 import { loadConfig } from './config/loader.js';
 import type { QuadConfig } from './config/schema.js';
 
@@ -187,9 +188,11 @@ if (isDirectRun) {
   render(
     <ErrorBoundary>
       <ConfigProvider config={resolvedConfig}>
-        <AgentRegistryProvider>
-          <App noApi={flags.noApi} noBridge={flags.noBridge} demo={flags.demo} />
-        </AgentRegistryProvider>
+        <ThemeProvider theme={resolvedConfig.theme}>
+          <AgentRegistryProvider>
+            <App noApi={flags.noApi} noBridge={flags.noBridge} demo={flags.demo} />
+          </AgentRegistryProvider>
+        </ThemeProvider>
       </ConfigProvider>
     </ErrorBoundary>
   );

@@ -4,44 +4,53 @@ import chalk from 'chalk';
 import { LOOP_PHASES } from '../engine/loopStateMachine.js';
 import type { LoopState, PhaseResult } from '../engine/loopStateMachine.js';
 import type { LoopPhase } from '../types/agent.js';
+import { useTheme } from '../utils/ThemeProvider.js';
+import type { ThemeColors, ThemeInkColors } from '../utils/theme.js';
 
 export interface LoopStatusBarProps {
   loopState: LoopState;
 }
 
-const phaseColors: Record<string, (s: string) => string> = {
-  plan: chalk.yellow,
-  code: chalk.green,
-  audit: chalk.blue,
-  push: chalk.magenta,
-};
+function getPhaseColor(phase: string, t: ThemeColors): (s: string) => string {
+  const map: Record<string, (s: string) => string> = {
+    plan: t.phasePlan,
+    code: t.phaseCode,
+    audit: t.phaseAudit,
+    push: t.phasePush,
+  };
+  return map[phase] ?? chalk.white;
+}
 
-const statusColors: Record<string, string> = {
-  running: 'green',
-  paused: 'yellow',
-  idle: 'gray',
-  error: 'red',
-};
+function getLoopStatusColor(status: string, ink: ThemeInkColors): string {
+  const map: Record<string, string> = {
+    running: ink.loopRunning,
+    paused: ink.loopPaused,
+    idle: ink.loopIdle,
+    error: ink.loopError,
+  };
+  return map[status] ?? 'white';
+}
 
 function formatPhaseSegment(
   phase: LoopPhase,
   result: PhaseResult,
   isCurrent: boolean,
+  t: ThemeColors,
 ): string {
   const label = phase.toUpperCase();
-  const colorFn = phaseColors[phase] ?? chalk.white;
+  const colorFn = getPhaseColor(phase, t);
 
   if (result === 'success') {
-    return chalk.green(`✓ ${label}`);
+    return t.success(`✓ ${label}`);
   }
   if (result === 'failed') {
-    return chalk.red(`✗ ${label}`);
+    return t.agentError(`✗ ${label}`);
   }
   if (isCurrent) {
     return colorFn(chalk.bold(`[${label}]`));
   }
   // pending
-  return chalk.dim(label);
+  return t.dim(label);
 }
 
 function formatElapsedPhase(phaseStartedAt: Date | null): string {
@@ -53,6 +62,7 @@ function formatElapsedPhase(phaseStartedAt: Date | null): string {
 }
 
 export function LoopStatusBar({ loopState }: LoopStatusBarProps) {
+  const { colors: t, ink } = useTheme();
   const { currentPhase, cycleCount, phaseStartedAt, status, phaseResults } = loopState;
 
   // Tick every second to update elapsed time when running
@@ -65,13 +75,13 @@ export function LoopStatusBar({ loopState }: LoopStatusBarProps) {
 
   const segments = LOOP_PHASES.map((phase, i) => {
     const isCurrent = status !== 'idle' && phase === currentPhase;
-    const segment = formatPhaseSegment(phase, phaseResults[phase], isCurrent);
-    const arrow = i < LOOP_PHASES.length - 1 ? chalk.dim(' → ') : '';
+    const segment = formatPhaseSegment(phase, phaseResults[phase], isCurrent, t);
+    const arrow = i < LOOP_PHASES.length - 1 ? t.dim(' → ') : '';
     return segment + arrow;
   }).join('');
 
   const statusLabel = status.toUpperCase();
-  const statusColor = statusColors[status] ?? 'white';
+  const statusColor = getLoopStatusColor(status, ink);
 
   return (
     <Box justifyContent="space-between" paddingX={1}>

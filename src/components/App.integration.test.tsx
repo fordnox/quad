@@ -3,6 +3,9 @@ import React from 'react';
 import { render } from 'ink-testing-library';
 import { App } from './App.js';
 import { AgentRegistryProvider } from '../store/AgentRegistryProvider.js';
+import { ConfigProvider } from '../config/ConfigProvider.js';
+import { ThemeProvider } from '../utils/ThemeProvider.js';
+import { DEFAULT_CONFIG } from '../config/schema.js';
 
 function wait(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -10,9 +13,13 @@ function wait(ms: number): Promise<void> {
 
 function renderApp() {
   return render(
-    <AgentRegistryProvider>
-      <App demo />
-    </AgentRegistryProvider>
+    <ConfigProvider config={DEFAULT_CONFIG}>
+      <ThemeProvider theme="default">
+        <AgentRegistryProvider>
+          <App demo skipSplash />
+        </AgentRegistryProvider>
+      </ThemeProvider>
+    </ConfigProvider>
   );
 }
 

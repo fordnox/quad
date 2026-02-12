@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Box, Text, useInput } from 'ink';
-import chalk from 'chalk';
 import type { LogEntry } from '../store/eventLog.js';
 import { getRecentLogs, onLogEntry } from '../store/eventLog.js';
+import { useTheme } from '../utils/ThemeProvider.js';
+import type { ThemeColors, ThemeInkColors } from '../utils/theme.js';
 
 export interface EventLogProps {
   /** Whether the event log panel is visible. */
@@ -18,29 +19,30 @@ function formatTimestamp(date: Date): string {
   return `${h}:${m}:${s}`;
 }
 
-function colorForLevel(level: LogEntry['level']): string {
+function colorForLevel(level: LogEntry['level'], ink: ThemeInkColors): string {
   switch (level) {
     case 'info':
       return 'white';
     case 'warn':
-      return 'yellow';
+      return ink.loopPaused;
     case 'error':
-      return 'red';
+      return ink.agentError;
   }
 }
 
-function levelTag(level: LogEntry['level']): string {
+function levelTag(level: LogEntry['level'], t: ThemeColors): string {
   switch (level) {
     case 'info':
-      return chalk.white('INF');
+      return t.logInfo('INF');
     case 'warn':
-      return chalk.yellow('WRN');
+      return t.logWarn('WRN');
     case 'error':
-      return chalk.red('ERR');
+      return t.logError('ERR');
   }
 }
 
 export function EventLog({ visible, maxLines = 12 }: EventLogProps) {
+  const { colors: t, ink } = useTheme();
   const [entries, setEntries] = useState<LogEntry[]>(() => getRecentLogs());
   const [scrollOffset, setScrollOffset] = useState(0);
 
@@ -81,13 +83,13 @@ export function EventLog({ visible, maxLines = 12 }: EventLogProps) {
     <Box
       flexDirection="column"
       borderStyle="single"
-      borderColor="gray"
+      borderColor={ink.border}
       paddingX={1}
       marginTop={1}
     >
       <Box>
         <Text bold>
-          {chalk.cyan('Event Log')} <Text dimColor>({entries.length} entries — ↑/↓ to scroll, [e] to close)</Text>
+          {t.accent('Event Log')} <Text dimColor>({entries.length} entries — ↑/↓ to scroll, [e] to close)</Text>
         </Text>
       </Box>
 
@@ -97,9 +99,9 @@ export function EventLog({ visible, maxLines = 12 }: EventLogProps) {
         visibleEntries.map((entry, i) => (
           <Box key={i} gap={1}>
             <Text dimColor>{formatTimestamp(entry.timestamp)}</Text>
-            <Text>{levelTag(entry.level)}</Text>
-            <Text color="cyan">{entry.source}</Text>
-            <Text color={colorForLevel(entry.level)}>{entry.message}</Text>
+            <Text>{levelTag(entry.level, t)}</Text>
+            <Text color={ink.accent}>{entry.source}</Text>
+            <Text color={colorForLevel(entry.level, ink)}>{entry.message}</Text>
           </Box>
         ))
       )}

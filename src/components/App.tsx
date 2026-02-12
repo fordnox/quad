@@ -1,12 +1,12 @@
 import React, { useEffect, useRef, useCallback, useState } from 'react';
 import { Box, Text, useApp, useInput, useStdin } from 'ink';
-import chalk from 'chalk';
 import { Grid } from './Grid.js';
 import { LoopStatusBar } from './LoopStatusBar.js';
 import { PhaseTransitionBanner } from './PhaseTransitionBanner.js';
 import { AddAgentForm } from './AddAgentForm.js';
 import { BridgeStatus } from './BridgeStatus.js';
 import { EventLog } from './EventLog.js';
+import { SplashScreen } from './SplashScreen.js';
 import { useAgentProcess } from '../hooks/useAgentProcess.js';
 import { useLoop } from '../hooks/useLoop.js';
 import type { LoopEvent } from '../hooks/useLoop.js';
@@ -15,6 +15,7 @@ import { useBridge } from '../hooks/useBridge.js';
 import { useAgentRegistry } from '../store/AgentRegistryProvider.js';
 import { useConfig } from '../config/ConfigProvider.js';
 import { addLogEntry } from '../store/eventLog.js';
+import { useTheme } from '../utils/ThemeProvider.js';
 import type { AgentConfig, AgentState } from '../types/agent.js';
 import { demoConfigs } from '../utils/demoAgents.js';
 
@@ -72,20 +73,30 @@ export interface AppProps {
   noBridge?: boolean;
   /** Start with demo agents for testing. */
   demo?: boolean;
+  /** Skip the startup splash screen. */
+  skipSplash?: boolean;
 }
 
-export function App({ noApi = false, noBridge = false, demo = false }: AppProps = {}) {
+export function App({ noApi = false, noBridge = false, demo = false, skipSplash = false }: AppProps = {}) {
   const { exit } = useApp();
   const { isRawModeSupported } = useStdin();
   const { agents, addAgent, updateAgent, removeAgent } = useAgentRegistry();
   const { focusedAgentId, detailMode, focusNext, focusPrev, toggleDetail, clearFocus, setFocus } = useFocus();
+  const [showSplash, setShowSplash] = useState(!skipSplash);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEventLog, setShowEventLog] = useState(false);
   const [killSignals, setKillSignals] = useState<Record<string, number>>({});
   const [runnerConfigs, setRunnerConfigs] = useState<AgentConfig[]>([]);
   const config = useConfig();
+  const { colors: themeColors } = useTheme();
 
   const { loopState, assignments, startLoop, pauseLoop, resumeLoop, resetLoop, onLoopEvent, offLoopEvent } = useLoop(agents);
+
+  // Set terminal title via ANSI escape sequence
+  useEffect(() => {
+    const title = `QUAD — ${agents.length} agent${agents.length !== 1 ? 's' : ''} — Cycle #${loopState.cycleCount}`;
+    process.stdout.write(`\x1b]0;${title}\x07`);
+  }, [agents.length, loopState.cycleCount]);
 
   // Log loop events
   useEffect(() => {
@@ -348,9 +359,17 @@ export function App({ noApi = false, noBridge = false, demo = false }: AppProps 
       handleRestartAgent(focusedAgentId);
       return;
     }
-  }, { isActive: isRawModeSupported === true && !showAddForm });
+  }, { isActive: isRawModeSupported === true && !showAddForm && !showSplash });
+
+  const handleSplashDone = useCallback(() => {
+    setShowSplash(false);
+  }, []);
 
   const nextId = String(agents.length + 1);
+
+  if (showSplash) {
+    return <SplashScreen onDone={handleSplashDone} />;
+  }
 
   if (showAddForm) {
     return (
@@ -391,7 +410,7 @@ export function App({ noApi = false, noBridge = false, demo = false }: AppProps 
       />
       {loopState.status === 'idle' && (
         <Box paddingX={1}>
-          <Text dimColor>Press {chalk.bold('[l]')} to start the loop</Text>
+          <Text dimColor>Press {themeColors.hintKey('[l]')} to start the loop</Text>
         </Box>
       )}
       <BridgeStatus apiPort={apiPort} jobFilePath={jobFilePath} apiRequestCount={apiRequestCount} />

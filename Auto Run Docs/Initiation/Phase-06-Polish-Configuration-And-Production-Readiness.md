@@ -74,7 +74,7 @@ This phase transforms QUAD from a functional prototype into a polished, configur
     - Errors and warnings
   > Completed: Created `eventLog.ts` (circular buffer with 100-entry cap, LogEntry interface, addLogEntry/getRecentLogs/clearLogs/onLogEntry/getLogCount) and `EventLog.tsx` (toggleable panel with `e` key, color-coded INF/WRN/ERR levels, Up/Down scrolling, timestamp+source+message display). Integrated logging across App.tsx (agent start/stop/crash/restart, loop events, shutdown, uncaught exceptions), apiServer.ts (API requests), useBridge.ts (job file changes), and loader.ts (config loaded/errors/warnings). Added `eventLog.test.ts` (11 tests) and `EventLog.test.tsx` (7 tests). All 1186 tests pass.
 
-- [ ] Apply visual polish and theming:
+- [x] Apply visual polish and theming:
   - Create `src/utils/theme.ts`:
     - Define color palettes for each theme (`default`, `minimal`, `neon`):
       - `default`: professional blues and grays
@@ -84,6 +84,7 @@ This phase transforms QUAD from a functional prototype into a polished, configur
   - Apply the theme throughout all components (AgentCard, LoopStatusBar, Grid, DetailView, EventLog)
   - Add a startup splash: when QUAD launches, briefly show a styled title ("QUAD" in big text using `ink-big-text` + `ink-gradient`) for 1.5 seconds before transitioning to the main grid view
   - Add terminal title setting: use ANSI escape to set the terminal tab title to `QUAD — [N agents] — Cycle #[M]`
+  > Completed: Created `theme.ts` (ThemeColors/ThemeInkColors interfaces, 3 theme palettes with 40+ semantic color mappings, getTheme/getInkTheme exports), `ThemeProvider.tsx` (React context with useTheme hook + default fallback), and `SplashScreen.tsx` (BigText + Gradient with theme-aware gradients, 1.5s auto-dismiss). Applied theme throughout all 8 components (AgentCard, Grid, DetailView, LoopStatusBar, EventLog, PhaseTransitionBanner, BridgeStatus, App). Added terminal title via ANSI `\x1b]0;...\x07` escape updating on agent count/cycle changes. Added `skipSplash` prop to App for test compatibility. Created `theme.test.ts` (12 tests) and `SplashScreen.test.tsx` (5 tests). All 1203 tests pass.
 
 - [ ] Write tests for critical modules:
   - `src/engine/loopStateMachine.test.ts`:
