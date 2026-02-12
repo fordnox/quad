@@ -31,7 +31,7 @@ This phase implements the heart of QUAD: the continuous **Plan → Code → Audi
     - Any agent can be assigned to `push` (or a default push agent handles `git push`)
   - If a phase has no assigned agents, auto-advance through it (skip empty phases)
 
-- [ ] Create a `useLoop` hook in `src/hooks/useLoop.ts`:
+- [x] Create a `useLoop` hook in `src/hooks/useLoop.ts`:
   - Wraps the loop state machine and orchestrator in React state
   - Provides: `loopState`, `startLoop()`, `pauseLoop()`, `resumeLoop()`, `resetLoop()`
   - Watches the agent registry — when all agents assigned to the current phase reach `finished` status, trigger `onPhaseComplete`
