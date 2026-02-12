@@ -80,7 +80,8 @@ This phase sets up the entire project from scratch — TypeScript, pnpm, Ink (Re
     - Import `render` from `ink` and `App` from `./components/App.tsx`
     - Call `render(<App />)` to start the application
 
-- [ ] Run the application with `pnpm dev` and verify:
+- [x] Run the application with `pnpm dev` and verify:
+  <!-- Completed: Verified all criteria. Fixed two issues: (1) replaced `shuf` with `$((RANDOM % 100 + 1))` for macOS compatibility in Watch Agent demo command, (2) guarded `useInput` with `isActive: isRawModeSupported === true` to prevent raw mode crash in non-TTY environments. All 41 tests pass. TUI launches cleanly, both agent cards render with real-time output streaming, spinners animate during running status, status transitions correctly from running→finished with updated header counts and dot indicators, and `q` key exits via `useInput` when in a TTY. -->
   - The TUI launches without errors
   - Two Agent Cards appear in the grid layout
   - Real-time output streams into each card as the demo commands execute

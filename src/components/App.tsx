@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useCallback } from 'react';
-import { useApp, useInput } from 'ink';
+import { useApp, useInput, useStdin } from 'ink';
 import { Grid } from './Grid.js';
 import { useAgentProcess } from '../hooks/useAgentProcess.js';
 import type { AgentConfig, AgentState } from '../types/agent.js';
@@ -18,7 +18,7 @@ const demoConfigs: AgentConfig[] = [
     name: 'Watch Agent',
     type: 'custom',
     role: 'auditor',
-    command: 'bash -c \'for i in $(seq 1 10); do echo "[Audit $i/10] Checking files... $(shuf -i 1-100 -n 1) files scanned"; sleep 2; done; echo "Audit complete."\'',
+    command: 'bash -c \'for i in $(seq 1 10); do echo "[Audit $i/10] Checking files... $((RANDOM % 100 + 1)) files scanned"; sleep 2; done; echo "Audit complete."\'',
     args: [],
   },
 ];
@@ -60,6 +60,7 @@ function AgentRunner({ config, onState }: AgentRunnerProps) {
 
 export function App() {
   const { exit } = useApp();
+  const { isRawModeSupported } = useStdin();
   const [agentStates, setAgentStates] = React.useState<Map<string, AgentState>>(new Map());
 
   const handleAgentState = useCallback((state: AgentState) => {
@@ -74,7 +75,7 @@ export function App() {
     if (input === 'q') {
       exit();
     }
-  });
+  }, { isActive: isRawModeSupported === true });
 
   const agents = Array.from(agentStates.values());
 
