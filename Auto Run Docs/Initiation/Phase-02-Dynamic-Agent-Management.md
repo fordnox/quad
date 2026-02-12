@@ -37,7 +37,8 @@ This phase transforms QUAD from a static demo into an interactive TUI where user
     - `q` — quit the application
   - Pass `focusedAgentId` to `<Grid>` so `<AgentCard>` can render a highlighted border when focused
 
-- [ ] Create a `DetailView` component in `src/components/DetailView.tsx`:
+- [x] Create a `DetailView` component in `src/components/DetailView.tsx`:
+  - **Completed**: Full-terminal-height view with 200-line rolling buffer, Up/Down/PageUp/PageDown scroll, auto-scroll to bottom on new output, complete metadata display (name, type, role, status, PID, start time, elapsed), prominent phase label, error display, and contextual footer hints. 25 tests passing.
   - A full-terminal-height view for a single agent, shown when `detailMode` is true
   - Display all available output lines (not just the last 10 — show up to 200 lines with scrolling)
   - Show full agent metadata: name, type, role, status, PID, start time, elapsed time
@@ -45,7 +46,8 @@ This phase transforms QUAD from a static demo into an interactive TUI where user
   - Support `Up`/`Down` arrow keys to scroll through output history
   - Show a hint at the bottom: `[Escape] back to grid  [k] kill  [r] restart`
 
-- [ ] Update `AgentCard.tsx` to support the focus highlight:
+- [x] Update `AgentCard.tsx` to support the focus highlight:
+  - **Already implemented**: `focused` prop accepted, bold border with yellow color when focused, `▶` indicator next to name, `chalk.bold` on name text. 17 tests passing including 3 focus-specific tests.
   - Accept a `focused: boolean` prop
   - When focused, change the border style to `"bold"` and border color to yellow/bright
   - Show a small `▶` or `*` indicator next to the agent name when focused
