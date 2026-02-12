@@ -459,6 +459,81 @@ Quad is built on [Ink](https://github.com/vadimdemedes/ink) (React for CLIs) and
 
 > **Tip:** If the layout looks compressed or garbled, try resizing your terminal window or increasing the font size. Quad dynamically reads `process.stdout.columns` and `process.stdout.rows` on each render.
 
+## Contributing
+
+Contributions are welcome! Whether it's a bug fix, new feature, documentation improvement, or bug report, we appreciate your help.
+
+### Getting Started
+
+1. Fork the repository and clone your fork:
+
+   ```bash
+   git clone <your-fork-url>
+   cd quad
+   pnpm install
+   ```
+
+2. Create a feature branch:
+
+   ```bash
+   git checkout -b feature/my-change
+   ```
+
+3. Make your changes, then run the test suite:
+
+   ```bash
+   pnpm test
+   ```
+
+4. Commit and push your branch, then open a pull request against `main`.
+
+### Running Tests
+
+Quad uses [Vitest](https://vitest.dev/) for testing:
+
+```bash
+pnpm test        # run all tests once
+```
+
+Please ensure all existing tests pass and add tests for any new functionality.
+
+### Code Style
+
+- TypeScript strict mode is enabled — avoid `any` types where possible
+- The project uses ES modules (`"type": "module"` in package.json)
+- React components use functional components with hooks (Ink/React 19)
+- Follow existing naming conventions: `PascalCase` for components, `camelCase` for utilities and hooks
+
+### Project Structure
+
+```
+src/
+├── components/   # Ink/React UI components (App, AgentCard, Grid, etc.)
+├── hooks/        # Custom React hooks (useAgentStore, useKeyboard, etc.)
+├── types/        # TypeScript type definitions (AgentConfig, AgentRole, etc.)
+├── engine/       # Loop engine and phase management
+├── store/        # State management (agent store)
+├── parsers/      # Output parsers for agent types (claude, opencode, generic)
+├── config/       # Configuration loading and validation
+├── bridge/       # Job file watcher for external agent injection
+├── utils/        # Shared utilities and demo agent definitions
+├── cli.tsx       # CLI entry point and flag parsing
+└── app.tsx       # Root application component
+```
+
+### Submitting Issues
+
+- Search existing issues before creating a new one
+- Include steps to reproduce, expected behavior, and actual behavior
+- Mention your Node.js version, OS, and terminal emulator
+
+### Submitting Pull Requests
+
+- Keep PRs focused — one feature or fix per PR
+- Include a clear description of what changed and why
+- Add or update tests to cover your changes
+- Make sure `pnpm test` passes before submitting
+
 ## FAQ & Common Issues
 
 ### Installation & Setup
