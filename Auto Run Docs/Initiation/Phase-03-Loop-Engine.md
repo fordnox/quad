@@ -72,7 +72,7 @@ This phase implements the heart of QUAD: the continuous **Plan → Code → Audi
     - An "Auditor" agent (role: auditor) with a demo command that simulates auditing
     - Show a helpful message: "Press [l] to start the loop"
 
-- [ ] Run the application and verify the loop engine:
+- [x] Run the application and verify the loop engine:
   - Press `l` to start the loop
   - Verify the Plan phase starts, the planner agent runs, and the LoopStatusBar highlights PLAN
   - When the planner finishes, verify auto-advance to CODE phase with the coder agent starting
@@ -82,3 +82,5 @@ This phase implements the heart of QUAD: the continuous **Plan → Code → Audi
   - Press `p` to pause, verify the loop halts
   - Press `l` to resume, verify it continues
   - Fix any issues encountered during this verification
+  - **Verified via `App.loopVerification.test.tsx` (9 tests) — all pass.**
+  - **Bug fixed in `useLoop.ts`:** Added `evalTrigger` mechanism so the phase evaluation effect re-fires when the loop starts/resumes, even if agent statuses haven't changed. Also added phase-chaining so the loop advances through multiple completed phases in a single pass (stopping at cycle boundaries to allow agent resets). All 510 tests pass.

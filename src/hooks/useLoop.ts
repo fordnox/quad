@@ -48,6 +48,9 @@ export function useLoop(agents: AgentState[]): UseLoopResult {
     assignAgentsByRole(agents.map((a) => a.config)),
   );
   const listenersRef = useRef<Set<LoopEventListener>>(new Set());
+  // Counter that triggers phase re-evaluation when the loop starts or resumes,
+  // ensuring we evaluate even if agent statuses haven't changed.
+  const [evalTrigger, setEvalTrigger] = useState(0);
 
   // Keep a ref to the latest loopState so the agent-watching effect
   // can read it without being in the dependency array.
@@ -86,6 +89,7 @@ export function useLoop(agents: AgentState[]): UseLoopResult {
       // If paused, resume instead of starting
       if (prev.status === 'paused') {
         emit({ type: 'loop-resumed' });
+        setEvalTrigger((t) => t + 1);
         return resumeLoopState(prev);
       }
       if (prev.status !== 'idle') return prev;
@@ -103,6 +107,7 @@ export function useLoop(agents: AgentState[]): UseLoopResult {
           skipped: skippedPhases,
         });
       }
+      setEvalTrigger((t) => t + 1);
       return state;
     });
   }, [emit]);
@@ -124,6 +129,7 @@ export function useLoop(agents: AgentState[]): UseLoopResult {
       const next = resumeLoopState(prev);
       if (next !== prev) {
         emit({ type: 'loop-resumed' });
+        setEvalTrigger((t) => t + 1);
       }
       return next;
     });
@@ -140,11 +146,14 @@ export function useLoop(agents: AgentState[]): UseLoopResult {
   // Fingerprint of agent statuses — only re-evaluate when an agent status changes
   const agentStatusKey = agents.map((a) => `${a.config.id}:${a.status}`).join(',');
 
-  // Watch agents for phase transitions. Only trigger on agent status changes,
-  // reading loopState from a ref to avoid a dependency cycle.
+  // Watch agents for phase transitions. Only trigger on agent status changes
+  // or when the loop starts/resumes (evalTrigger). Reads loopState from a ref
+  // to avoid a dependency cycle. Chains through multiple completed phases in
+  // a single pass so the loop doesn't stall when agents are already finished.
+  // Stops chaining at cycle boundaries to give the system a chance to reset agents.
   useEffect(() => {
-    const currentState = loopStateRef.current;
-    if (currentState.status !== 'running') return;
+    let state = loopStateRef.current;
+    if (state.status !== 'running') return;
 
     const registry = new Map<string, AgentState>();
     for (const agent of agents) {
@@ -152,20 +161,25 @@ export function useLoop(agents: AgentState[]): UseLoopResult {
     }
 
     const currentAssignments = assignmentsRef.current;
-    const result: OrchestratorResult = evaluatePhase(currentState, registry, currentAssignments);
+    const startCycle = state.cycleCount;
+    const PHASE_COUNT = 4; // plan, code, audit, push — max iterations to prevent infinite loops
+    let advanced = false;
 
-    if (result.failed) {
-      setLoopState(result.state);
-      emit({ type: 'phase-fail', phase: currentState.currentPhase });
-      return;
-    }
+    for (let i = 0; i < PHASE_COUNT; i++) {
+      const result: OrchestratorResult = evaluatePhase(state, registry, currentAssignments);
 
-    if (result.advanced) {
-      const previousPhase = currentState.currentPhase;
+      if (result.failed) {
+        setLoopState(result.state);
+        emit({ type: 'phase-fail', phase: state.currentPhase });
+        return;
+      }
+
+      if (!result.advanced) break;
+
+      advanced = true;
+      const previousPhase = state.currentPhase;
       const newPhase = result.state.currentPhase;
-      const cycleIncremented = result.state.cycleCount > currentState.cycleCount;
-
-      setLoopState(result.state);
+      const cycleIncremented = result.state.cycleCount > startCycle;
 
       emit({
         type: 'phase-advance',
@@ -177,8 +191,17 @@ export function useLoop(agents: AgentState[]): UseLoopResult {
       if (cycleIncremented) {
         emit({ type: 'cycle-complete', cycleCount: result.state.cycleCount });
       }
+
+      state = result.state;
+
+      // Stop chaining at cycle boundaries to allow agent resets
+      if (cycleIncremented) break;
     }
-  }, [agentStatusKey, emit]);
+
+    if (advanced) {
+      setLoopState(state);
+    }
+  }, [agentStatusKey, evalTrigger, emit]);
 
   return {
     loopState,
