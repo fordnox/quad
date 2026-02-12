@@ -4,7 +4,7 @@ This phase implements the heart of QUAD: the continuous **Plan → Code → Audi
 
 ## Tasks
 
-- [ ] Create the Loop state machine in `src/engine/loopStateMachine.ts`:
+- [x] Create the Loop state machine in `src/engine/loopStateMachine.ts`:
   - Define the phase order: `['plan', 'code', 'audit', 'push']` as a constant
   - Create a `LoopState` interface:
     - `currentPhase: LoopPhase` — which phase the loop is currently in
@@ -18,7 +18,7 @@ This phase implements the heart of QUAD: the continuous **Plan → Code → Audi
     - `resetLoop(): LoopState` — returns a fresh idle state
     - `pauseLoop(state: LoopState): LoopState` / `resumeLoop(state: LoopState): LoopState`
 
-- [ ] Create the Loop Orchestrator in `src/engine/loopOrchestrator.ts`:
+- [x] Create the Loop Orchestrator in `src/engine/loopOrchestrator.ts`:
   - A class or module that coordinates agents through the loop:
     - `assignAgentsToPhase(phase: LoopPhase, agents: AgentConfig[])` — maps which agents run in which phase
     - `startLoop(registry)` — begins from `plan` phase, spawns the agents assigned to `plan`
