@@ -14,9 +14,24 @@
     "test": "vitest run",
     "prepublishOnly": "pnpm build"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "tui",
+    "terminal",
+    "multi-agent",
+    "ai",
+    "cli",
+    "ink",
+    "react",
+    "orchestration",
+    "coding-agents",
+    "dashboard"
+  ],
+  "author": "fordnox",
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fordnox/quad.git"
+  },
   "packageManager": "pnpm@10.29.3",
   "dependencies": {
     "chalk": "^5.6.2",
