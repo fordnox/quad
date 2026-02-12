@@ -299,5 +299,71 @@ describe('claudeParser', () => {
       const result = claudeParser.parse('Build Failed with exit code 1');
       expect(result.type).toBe('error');
     });
+
+    it('returns a timestamp on every parse result', () => {
+      const before = new Date();
+      const result = claudeParser.parse('Error: test');
+      expect(result.timestamp).toBeInstanceOf(Date);
+      expect(result.timestamp.getTime()).toBeGreaterThanOrEqual(before.getTime());
+    });
+
+    it('handles line with multiple patterns (first pattern wins)', () => {
+      // "[2/5] Creating file.ts" — progress bracket should win over code "Creating"
+      const result = claudeParser.parse('[2/5] Creating file.ts');
+      expect(result.type).toBe('progress');
+      expect(result.progress).toEqual({ current: 2, total: 5 });
+    });
+  });
+
+  describe('OSC ANSI sequence stripping', () => {
+    it('strips OSC sequences (terminal title escapes)', () => {
+      expect(stripAnsi('\x1b]0;Terminal Title\x07some text')).toBe('some text');
+    });
+  });
+
+  describe('progress edge cases', () => {
+    it('extracts large progress numbers', () => {
+      const result = claudeParser.parse('[100/999] Processing');
+      expect(result.type).toBe('progress');
+      expect(result.progress).toEqual({ current: 100, total: 999 });
+    });
+
+    it('handles 0% progress', () => {
+      const result = claudeParser.parse('Progress: 0%');
+      expect(result.type).toBe('progress');
+      expect(result.progress).toEqual({ current: 0, total: 100 });
+    });
+
+    it('handles 100% progress', () => {
+      const result = claudeParser.parse('Complete: 100%');
+      expect(result.type).toBe('progress');
+      expect(result.progress).toEqual({ current: 100, total: 100 });
+    });
+  });
+
+  describe('tool detection completeness', () => {
+    it('detects Write tool usage', () => {
+      const result = claudeParser.parse('Write new file to disk');
+      expect(result.type).toBe('info');
+      expect(result.summary).toContain('Tool: Write');
+    });
+
+    it('detects WebFetch tool usage', () => {
+      const result = claudeParser.parse('WebFetch https://example.com');
+      expect(result.type).toBe('info');
+      expect(result.summary).toContain('Tool: WebFetch');
+    });
+
+    it('detects Glob tool usage', () => {
+      const result = claudeParser.parse('Glob **/*.ts');
+      expect(result.type).toBe('info');
+      expect(result.summary).toContain('Tool: Glob');
+    });
+
+    it('detects Task tool usage', () => {
+      const result = claudeParser.parse('Task spawning subagent');
+      expect(result.type).toBe('info');
+      expect(result.summary).toContain('Tool: Task');
+    });
   });
 });

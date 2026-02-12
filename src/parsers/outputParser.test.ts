@@ -156,4 +156,76 @@ describe('ParserPipeline', () => {
     const result = pipeline.parseLine('test');
     expect(result.summary).toBe('high priority');
   });
+
+  it('only calls parse on the first matching parser (not subsequent ones)', () => {
+    let parserBParseCalled = false;
+
+    const parserA = makeParser({
+      name: 'parser-a',
+      canParse: () => true,
+      parse: (line) => ({
+        raw: line,
+        type: 'status',
+        summary: 'from A',
+        progress: null,
+        timestamp: new Date(),
+      }),
+    });
+    const parserB = makeParser({
+      name: 'parser-b',
+      canParse: () => true,
+      parse: (line) => {
+        parserBParseCalled = true;
+        return {
+          raw: line,
+          type: 'error',
+          summary: 'from B',
+          progress: null,
+          timestamp: new Date(),
+        };
+      },
+    });
+
+    const pipeline = new ParserPipeline([parserA, parserB]);
+    pipeline.parseLine('test');
+    expect(parserBParseCalled).toBe(false);
+  });
+
+  it('unknown fallback includes a timestamp', () => {
+    const pipeline = new ParserPipeline([]);
+    const before = new Date();
+    const result = pipeline.parseLine('no match');
+    expect(result.timestamp).toBeInstanceOf(Date);
+    expect(result.timestamp.getTime()).toBeGreaterThanOrEqual(before.getTime());
+  });
+
+  it('works with a single parser', () => {
+    const parser = makeParser({
+      name: 'only',
+      canParse: (line) => line === 'match',
+      parse: (line) => ({
+        raw: line,
+        type: 'info',
+        summary: 'only parser matched',
+        progress: null,
+        timestamp: new Date(),
+      }),
+    });
+
+    const pipeline = new ParserPipeline([parser]);
+
+    const matched = pipeline.parseLine('match');
+    expect(matched.type).toBe('info');
+    expect(matched.summary).toBe('only parser matched');
+
+    const unmatched = pipeline.parseLine('no match');
+    expect(unmatched.type).toBe('unknown');
+  });
+
+  it('handles empty string input', () => {
+    const pipeline = new ParserPipeline([]);
+    const result = pipeline.parseLine('');
+    expect(result.type).toBe('unknown');
+    expect(result.raw).toBe('');
+  });
 });

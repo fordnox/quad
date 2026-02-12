@@ -123,6 +123,38 @@ describe('loadConfig', () => {
     expect(config.defaultAgents).toHaveLength(1);
     expect(config.defaultAgents[0].name).toBe('Agent1');
   });
+
+  it('handles config with invalid apiPort type and still returns defaults', () => {
+    const configPath = path.join(tmpDir, 'config.json');
+    fs.writeFileSync(configPath, JSON.stringify({ apiPort: 'not-a-number' }), 'utf-8');
+
+    const config = loadConfig(configPath);
+
+    // Validation warns but still merges — the invalid value is present in merged result
+    // but the validation warning was emitted to stderr
+    expect(config).toBeDefined();
+    expect(config.maxAgents).toBe(DEFAULT_CONFIG.maxAgents);
+  });
+
+  it('handles config with extra unknown fields gracefully', () => {
+    const configPath = path.join(tmpDir, 'config.json');
+    fs.writeFileSync(configPath, JSON.stringify({ unknownField: 'hello', apiPort: 5000 }), 'utf-8');
+
+    const config = loadConfig(configPath);
+
+    expect(config.apiPort).toBe(5000);
+    expect(config.maxAgents).toBe(DEFAULT_CONFIG.maxAgents);
+  });
+
+  it('preserves absolute jobFilePath without modification', () => {
+    const configPath = path.join(tmpDir, 'config.json');
+    const absPath = '/tmp/custom/jobs.json';
+    fs.writeFileSync(configPath, JSON.stringify({ jobFilePath: absPath }), 'utf-8');
+
+    const config = loadConfig(configPath);
+
+    expect(config.jobFilePath).toBe(absPath);
+  });
 });
 
 describe('saveConfig', () => {

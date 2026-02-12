@@ -209,4 +209,130 @@ describe('loopStateMachine', () => {
       expect(state.currentPhase).toBe('audit');
     });
   });
+
+  describe('immutability', () => {
+    it('does not mutate the original state on advancePhase', () => {
+      const state = startLoop(resetLoop());
+      const original = { ...state, phaseResults: { ...state.phaseResults } };
+      advancePhase(state);
+      expect(state.currentPhase).toBe(original.currentPhase);
+      expect(state.cycleCount).toBe(original.cycleCount);
+    });
+
+    it('does not mutate the original state on failPhase', () => {
+      const state = startLoop(resetLoop());
+      const originalStatus = state.status;
+      failPhase(state);
+      expect(state.status).toBe(originalStatus);
+    });
+
+    it('does not mutate the original state on pauseLoop', () => {
+      const state = startLoop(resetLoop());
+      pauseLoop(state);
+      expect(state.status).toBe('running');
+    });
+  });
+
+  describe('invalid state transitions', () => {
+    it('advancePhase does nothing when status is error', () => {
+      let state = startLoop(resetLoop());
+      state = failPhase(state);
+      const result = advancePhase(state);
+      expect(result).toBe(state);
+    });
+
+    it('advancePhase does nothing when status is idle', () => {
+      const state = resetLoop();
+      const result = advancePhase(state);
+      expect(result).toBe(state);
+    });
+
+    it('pauseLoop does nothing when status is paused', () => {
+      let state = startLoop(resetLoop());
+      state = pauseLoop(state);
+      const result = pauseLoop(state);
+      expect(result).toBe(state);
+    });
+
+    it('resumeLoop does nothing when status is running', () => {
+      const state = startLoop(resetLoop());
+      const result = resumeLoop(state);
+      expect(result).toBe(state);
+    });
+
+    it('resumeLoop does nothing when status is error', () => {
+      let state = startLoop(resetLoop());
+      state = failPhase(state);
+      const result = resumeLoop(state);
+      expect(result).toBe(state);
+    });
+
+    it('failPhase does nothing when status is paused', () => {
+      let state = startLoop(resetLoop());
+      state = pauseLoop(state);
+      const result = failPhase(state);
+      expect(result).toBe(state);
+    });
+
+    it('startLoop does nothing when status is error', () => {
+      let state = startLoop(resetLoop());
+      state = failPhase(state);
+      const result = startLoop(state);
+      expect(result).toBe(state);
+    });
+  });
+
+  describe('advancePhase from idle currentPhase while running', () => {
+    it('starts at plan if currentPhase is idle but status is running', () => {
+      // Simulate an edge case where status is running but phase is idle
+      const state: LoopState = {
+        currentPhase: 'idle',
+        cycleCount: 0,
+        phaseStartedAt: null,
+        status: 'running',
+        phaseResults: {
+          plan: 'pending',
+          code: 'pending',
+          audit: 'pending',
+          push: 'pending',
+          idle: 'pending',
+        },
+      };
+      const result = advancePhase(state);
+      expect(result.currentPhase).toBe('plan');
+      expect(result.phaseStartedAt).toBeInstanceOf(Date);
+    });
+  });
+
+  describe('cycle count across multiple wraps', () => {
+    it('correctly increments cycle count across 5 full cycles', () => {
+      let state = startLoop(resetLoop());
+      for (let cycle = 0; cycle < 5; cycle++) {
+        state = advancePhase(state); // plan → code
+        state = advancePhase(state); // code → audit
+        state = advancePhase(state); // audit → push
+        state = advancePhase(state); // push → plan (wrap)
+      }
+      expect(state.cycleCount).toBe(5);
+      expect(state.currentPhase).toBe('plan');
+      expect(state.status).toBe('running');
+    });
+  });
+
+  describe('phase results reset on wrap', () => {
+    it('resets all phase results to pending on cycle wrap', () => {
+      let state = startLoop(resetLoop());
+      // Complete full cycle
+      state = advancePhase(state); // plan(success) → code
+      state = advancePhase(state); // code(success) → audit
+      state = advancePhase(state); // audit(success) → push
+      state = advancePhase(state); // push(success) → plan (wrap)
+
+      // After wrap, all should be pending for new cycle
+      expect(state.phaseResults.plan).toBe('pending');
+      expect(state.phaseResults.code).toBe('pending');
+      expect(state.phaseResults.audit).toBe('pending');
+      expect(state.phaseResults.push).toBe('pending');
+    });
+  });
 });

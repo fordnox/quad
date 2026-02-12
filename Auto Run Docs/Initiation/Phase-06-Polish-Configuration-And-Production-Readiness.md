@@ -86,7 +86,7 @@ This phase transforms QUAD from a functional prototype into a polished, configur
   - Add terminal title setting: use ANSI escape to set the terminal tab title to `QUAD — [N agents] — Cycle #[M]`
   > Completed: Created `theme.ts` (ThemeColors/ThemeInkColors interfaces, 3 theme palettes with 40+ semantic color mappings, getTheme/getInkTheme exports), `ThemeProvider.tsx` (React context with useTheme hook + default fallback), and `SplashScreen.tsx` (BigText + Gradient with theme-aware gradients, 1.5s auto-dismiss). Applied theme throughout all 8 components (AgentCard, Grid, DetailView, LoopStatusBar, EventLog, PhaseTransitionBanner, BridgeStatus, App). Added terminal title via ANSI `\x1b]0;...\x07` escape updating on agent count/cycle changes. Added `skipSplash` prop to App for test compatibility. Created `theme.test.ts` (12 tests) and `SplashScreen.test.tsx` (5 tests). All 1203 tests pass.
 
-- [ ] Write tests for critical modules:
+- [x] Write tests for critical modules:
   - `src/engine/loopStateMachine.test.ts`:
     - Test phase advancement: plan → code → audit → push → plan (wrap)
     - Test cycle count increment on wrap
@@ -105,6 +105,7 @@ This phase transforms QUAD from a functional prototype into a polished, configur
     - Test invalid config handling
   - Use Node.js built-in `node:test` and `node:assert` (no external test framework needed)
   - Add a `"test": "node --test --loader tsx 'src/**/*.test.ts'"` script to package.json
+  > Completed: All four test files already existed from earlier phases (using vitest, the project's established test framework). Audited each against task requirements and added 30 new tests: `loopStateMachine.test.ts` (32 total — added immutability checks, invalid state transitions, edge case for idle→running, multi-cycle wrap, phase results reset), `claudeParser.test.ts` (59 total — added OSC ANSI stripping, progress edge cases 0%/100%/large numbers, Write/WebFetch/Glob/Task tool detection, multi-pattern priority), `outputParser.test.ts` (11 total — added parser isolation verification, timestamp on fallback, single parser behavior, empty input), `loader.test.ts` (15 total — added invalid apiPort type, unknown fields, absolute path preservation). Test script `"test": "vitest run"` was already in package.json. All 1268 tests pass across 69 test files.
 
 - [ ] Run all tests and perform a final integration check:
   - Run `pnpm test` and fix any failing tests
