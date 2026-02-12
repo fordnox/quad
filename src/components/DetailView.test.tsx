@@ -1,0 +1,217 @@
+import { describe, it, expect } from 'vitest';
+import React from 'react';
+import { render } from 'ink-testing-library';
+import { DetailView } from './DetailView.js';
+import type { AgentState, AgentConfig } from '../types/agent.js';
+
+const makeConfig = (overrides?: Partial<AgentConfig>): AgentConfig => ({
+  id: 'test-1',
+  name: 'Test Agent',
+  type: 'custom',
+  role: 'coder',
+  command: 'echo hello',
+  args: [],
+  ...overrides,
+});
+
+const makeState = (overrides?: Partial<AgentState>): AgentState => ({
+  config: makeConfig(),
+  status: 'idle',
+  phase: 'idle',
+  output: [],
+  pid: null,
+  startedAt: null,
+  error: null,
+  ...overrides,
+});
+
+describe('DetailView', () => {
+  it('renders the agent name in the header', () => {
+    const agent = makeState({ config: makeConfig({ name: 'My Agent' }) });
+    const { lastFrame } = render(<DetailView agent={agent} isActive={false} />);
+    expect(lastFrame()).toContain('My Agent');
+  });
+
+  it('shows DETAIL: label in header', () => {
+    const agent = makeState();
+    const { lastFrame } = render(<DetailView agent={agent} isActive={false} />);
+    expect(lastFrame()).toContain('DETAIL:');
+  });
+
+  it('renders type and role badges', () => {
+    const agent = makeState({
+      config: makeConfig({ type: 'claude', role: 'auditor' }),
+    });
+    const { lastFrame } = render(<DetailView agent={agent} isActive={false} />);
+    expect(lastFrame()).toContain('[claude]');
+    expect(lastFrame()).toContain('[auditor]');
+  });
+
+  it('shows phase label in uppercase', () => {
+    const agent = makeState({ phase: 'code' });
+    const { lastFrame } = render(<DetailView agent={agent} isActive={false} />);
+    expect(lastFrame()).toContain('[CODE]');
+  });
+
+  it('shows IDLE phase by default', () => {
+    const agent = makeState();
+    const { lastFrame } = render(<DetailView agent={agent} isActive={false} />);
+    expect(lastFrame()).toContain('[IDLE]');
+  });
+
+  it('renders PID when available', () => {
+    const agent = makeState({ pid: 54321 });
+    const { lastFrame } = render(<DetailView agent={agent} isActive={false} />);
+    expect(lastFrame()).toContain('PID: 54321');
+  });
+
+  it('renders placeholder PID when null', () => {
+    const agent = makeState({ pid: null });
+    const { lastFrame } = render(<DetailView agent={agent} isActive={false} />);
+    expect(lastFrame()).toContain('PID: ---');
+  });
+
+  it('renders elapsed time placeholder when not started', () => {
+    const agent = makeState({ startedAt: null });
+    const { lastFrame } = render(<DetailView agent={agent} isActive={false} />);
+    expect(lastFrame()).toContain('Elapsed: --:--');
+  });
+
+  it('renders elapsed time when started', () => {
+    const startedAt = new Date(Date.now() - 65000);
+    const agent = makeState({ startedAt });
+    const { lastFrame } = render(<DetailView agent={agent} isActive={false} />);
+    expect(lastFrame()).toContain('Elapsed: 01:05');
+  });
+
+  it('renders start time when started', () => {
+    const startedAt = new Date(2024, 0, 15, 14, 30, 45);
+    const agent = makeState({ startedAt });
+    const { lastFrame } = render(<DetailView agent={agent} isActive={false} />);
+    expect(lastFrame()).toContain('Started:');
+    // The exact format depends on locale, but it should not be '---'
+    expect(lastFrame()).not.toContain('Started: ---');
+  });
+
+  it('renders start time placeholder when not started', () => {
+    const agent = makeState({ startedAt: null });
+    const { lastFrame } = render(<DetailView agent={agent} isActive={false} />);
+    expect(lastFrame()).toContain('Started: ---');
+  });
+
+  it('shows status in metadata', () => {
+    const agent = makeState({ status: 'running' });
+    const { lastFrame } = render(<DetailView agent={agent} isActive={false} />);
+    expect(lastFrame()).toContain('Status: running');
+  });
+
+  it('shows error message when present', () => {
+    const agent = makeState({ status: 'error', error: 'Something failed' });
+    const { lastFrame } = render(<DetailView agent={agent} isActive={false} />);
+    const frame = lastFrame()!;
+    expect(frame).toContain('Error:');
+    expect(frame).toContain('Something failed');
+  });
+
+  it('does not show error label when no error', () => {
+    const agent = makeState({ status: 'idle', error: null });
+    const { lastFrame } = render(<DetailView agent={agent} isActive={false} />);
+    expect(lastFrame()).not.toContain('Error:');
+  });
+
+  it('renders output lines', () => {
+    const agent = makeState({
+      output: ['line one', 'line two', 'line three'],
+    });
+    const { lastFrame } = render(<DetailView agent={agent} isActive={false} />);
+    const frame = lastFrame()!;
+    expect(frame).toContain('line one');
+    expect(frame).toContain('line two');
+    expect(frame).toContain('line three');
+  });
+
+  it('renders footer with keybinding hints', () => {
+    const agent = makeState();
+    const { lastFrame } = render(<DetailView agent={agent} isActive={false} />);
+    const frame = lastFrame()!;
+    expect(frame).toContain('[Escape]');
+    expect(frame).toContain('back to grid');
+    expect(frame).toContain('[k]');
+    expect(frame).toContain('kill');
+    expect(frame).toContain('[r]');
+    expect(frame).toContain('restart');
+  });
+
+  it('shows scroll hint in footer', () => {
+    const agent = makeState();
+    const { lastFrame } = render(<DetailView agent={agent} isActive={false} />);
+    expect(lastFrame()).toContain('[↑/↓]');
+    expect(lastFrame()).toContain('scroll');
+  });
+
+  it('renders status dot for non-running agents', () => {
+    const agent = makeState({ status: 'idle' });
+    const { lastFrame } = render(<DetailView agent={agent} isActive={false} />);
+    expect(lastFrame()).toContain('●');
+  });
+
+  it('renders a separator line', () => {
+    const agent = makeState();
+    const { lastFrame } = render(<DetailView agent={agent} isActive={false} />);
+    expect(lastFrame()).toContain('─');
+  });
+
+  it('renders without errors for all status types', () => {
+    const statuses = ['idle', 'running', 'finished', 'error'] as const;
+    for (const status of statuses) {
+      const agent = makeState({ status });
+      const { lastFrame } = render(<DetailView agent={agent} isActive={false} />);
+      expect(lastFrame()).toBeTruthy();
+    }
+  });
+
+  it('renders without errors for all phase types', () => {
+    const phases = ['plan', 'code', 'audit', 'push', 'idle'] as const;
+    for (const phase of phases) {
+      const agent = makeState({ phase });
+      const { lastFrame } = render(<DetailView agent={agent} isActive={false} />);
+      expect(lastFrame()).toContain(`[${phase.toUpperCase()}]`);
+    }
+  });
+
+  it('renders without errors for all agent types', () => {
+    const types = ['claude', 'opencode', 'custom'] as const;
+    for (const type of types) {
+      const agent = makeState({ config: makeConfig({ type }) });
+      const { lastFrame } = render(<DetailView agent={agent} isActive={false} />);
+      expect(lastFrame()).toContain(`[${type}]`);
+    }
+  });
+
+  it('renders without errors for all role types', () => {
+    const roles = ['coder', 'auditor', 'planner', 'reviewer'] as const;
+    for (const role of roles) {
+      const agent = makeState({ config: makeConfig({ role }) });
+      const { lastFrame } = render(<DetailView agent={agent} isActive={false} />);
+      expect(lastFrame()).toContain(`[${role}]`);
+    }
+  });
+
+  it('handles large output without crashing', () => {
+    const output = Array.from({ length: 300 }, (_, i) => `line-${i + 1}`);
+    const agent = makeState({ output });
+    const { lastFrame } = render(<DetailView agent={agent} isActive={false} />);
+    const frame = lastFrame()!;
+    expect(frame).toBeTruthy();
+    // Should show the first visible portion of the last 200 lines (lines 101+)
+    expect(frame).toContain('line-101');
+    // Lines before the 200-line window should be excluded
+    expect(frame).not.toContain('line-100');
+  });
+
+  it('handles empty output gracefully', () => {
+    const agent = makeState({ output: [] });
+    const { lastFrame } = render(<DetailView agent={agent} isActive={false} />);
+    expect(lastFrame()).toBeTruthy();
+  });
+});
