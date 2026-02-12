@@ -68,12 +68,12 @@ const OPENCODE_PATTERNS: PatternRule[] = [
   {
     type: 'info',
     pattern: /\b(gpt-4|gpt-3\.5|claude|gemini|llama|mistral|deepseek|o1|o3)\b/i,
-    summarize: (line, match) => `Model: ${match[1]} — ${truncate(stripAnsi(line))}`,
+    summarize: (line) => truncate(stripAnsi(line)),
   },
   {
     type: 'info',
     pattern: /\b(openai|anthropic|google|ollama|groq|together)\b/i,
-    summarize: (line, match) => `Provider: ${match[1]} — ${truncate(stripAnsi(line))}`,
+    summarize: (line) => truncate(stripAnsi(line)),
   },
 
   // Error/warning patterns

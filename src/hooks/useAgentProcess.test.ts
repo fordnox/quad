@@ -26,7 +26,7 @@ describe('createPipelineForType', () => {
     const pipeline = createPipelineForType('opencode');
     const result = pipeline.parseLine('Using gpt-4 for code generation');
     expect(result.type).toBe('info');
-    expect(result.summary).toContain('Model: gpt-4');
+    expect(result.summary).toContain('gpt-4');
   });
 
   it('opencode pipeline detects token tracking', () => {

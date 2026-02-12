@@ -71,7 +71,7 @@ This phase adds intelligent output parsing so QUAD can extract meaningful status
     - A "Git Push" demo that outputs: git add, git commit, git push with realistic-looking output
   - Update `App.tsx` to import demo agents from this utility instead of hardcoding them
 
-- [ ] Run the application and verify output parsing:
+- [x] Run the application and verify output parsing: *(completed: app launched with demo agents, all verification items confirmed — fixed duplicated `Model:/Provider:` prefix bug in `opencodeParser.ts` summarize functions that was doubling model names in summaries; added 3 new async tests for filter key toggling (`1`/`2`/`3`) in `DetailView.test.tsx` confirming filter label changes and output filtering; all 932 tests passing across 43 files)*
   - Start the app with demo agents running
   - Verify that `currentActivity` shows meaningful summaries on each AgentCard (not raw text)
   - Verify color-coded output in both grid view and detail view

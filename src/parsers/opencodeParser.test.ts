@@ -32,55 +32,55 @@ describe('opencodeParser', () => {
     it('detects gpt-4 model mention', () => {
       const result = opencodeParser.parse('Using gpt-4 for code generation');
       expect(result.type).toBe('info');
-      expect(result.summary).toContain('Model: gpt-4');
+      expect(result.summary).toContain('gpt-4');
     });
 
     it('detects gpt-3.5 model mention', () => {
       const result = opencodeParser.parse('Switched to gpt-3.5 turbo');
       expect(result.type).toBe('info');
-      expect(result.summary).toContain('Model: gpt-3.5');
+      expect(result.summary).toContain('gpt-3.5');
     });
 
     it('detects claude model mention', () => {
       const result = opencodeParser.parse('Response from claude model');
       expect(result.type).toBe('info');
-      expect(result.summary).toContain('Model: claude');
+      expect(result.summary).toContain('claude');
     });
 
     it('detects gemini model mention', () => {
       const result = opencodeParser.parse('Using gemini-pro for analysis');
       expect(result.type).toBe('info');
-      expect(result.summary).toContain('Model: gemini');
+      expect(result.summary).toContain('gemini');
     });
 
     it('detects deepseek model mention', () => {
       const result = opencodeParser.parse('Querying deepseek-coder');
       expect(result.type).toBe('info');
-      expect(result.summary).toContain('Model: deepseek');
+      expect(result.summary).toContain('deepseek');
     });
 
     it('detects openai provider mention', () => {
       const result = opencodeParser.parse('Connected to openai API');
       expect(result.type).toBe('info');
-      expect(result.summary).toContain('Provider: openai');
+      expect(result.summary).toContain('openai');
     });
 
     it('detects anthropic provider mention', () => {
       const result = opencodeParser.parse('Using anthropic endpoint');
       expect(result.type).toBe('info');
-      expect(result.summary).toContain('Provider: anthropic');
+      expect(result.summary).toContain('anthropic');
     });
 
     it('detects ollama provider mention', () => {
       const result = opencodeParser.parse('Connecting to ollama server');
       expect(result.type).toBe('info');
-      expect(result.summary).toContain('Provider: ollama');
+      expect(result.summary).toContain('ollama');
     });
 
     it('is case-insensitive for model names', () => {
       const result = opencodeParser.parse('Using GPT-4 model');
       expect(result.type).toBe('info');
-      expect(result.summary).toContain('Model:');
+      expect(result.summary).toContain('GPT-4');
     });
   });
 

@@ -297,4 +297,55 @@ describe('DetailView', () => {
     const { lastFrame } = render(<DetailView agent={agent} isActive={false} />);
     expect(lastFrame()).toBeTruthy();
   });
+
+  it('pressing "2" filters to errors only', async () => {
+    const parsed: ParsedOutput[] = [
+      { raw: 'Error: something broke', type: 'error', summary: 'Error: something broke', progress: null, timestamp: new Date() },
+      { raw: '$ npm test', type: 'command', summary: '$ npm test', progress: null, timestamp: new Date() },
+      { raw: 'just text', type: 'unknown', summary: 'just text', progress: null, timestamp: new Date() },
+    ];
+    const agent = makeState({ parsedOutput: parsed });
+    const { lastFrame, stdin } = render(<DetailView agent={agent} isActive={true} />);
+    stdin.write('2');
+    await new Promise((r) => setTimeout(r, 100));
+    const frame = lastFrame()!;
+    expect(frame).toContain('[ERRORS]');
+    expect(frame).toContain('Error: something broke');
+    expect(frame).not.toContain('just text');
+  });
+
+  it('pressing "3" filters to commands only', async () => {
+    const parsed: ParsedOutput[] = [
+      { raw: 'Error: something broke', type: 'error', summary: 'Error: something broke', progress: null, timestamp: new Date() },
+      { raw: '$ npm test', type: 'command', summary: '$ npm test', progress: null, timestamp: new Date() },
+      { raw: 'just text', type: 'unknown', summary: 'just text', progress: null, timestamp: new Date() },
+    ];
+    const agent = makeState({ parsedOutput: parsed });
+    const { lastFrame, stdin } = render(<DetailView agent={agent} isActive={true} />);
+    stdin.write('3');
+    await new Promise((r) => setTimeout(r, 100));
+    const frame = lastFrame()!;
+    expect(frame).toContain('[COMMANDS]');
+    expect(frame).toContain('$ npm test');
+    expect(frame).not.toContain('just text');
+  });
+
+  it('pressing "1" returns to all output after filtering', async () => {
+    const parsed: ParsedOutput[] = [
+      { raw: 'Error: something broke', type: 'error', summary: 'Error: something broke', progress: null, timestamp: new Date() },
+      { raw: '$ npm test', type: 'command', summary: '$ npm test', progress: null, timestamp: new Date() },
+      { raw: 'just text', type: 'unknown', summary: 'just text', progress: null, timestamp: new Date() },
+    ];
+    const agent = makeState({ parsedOutput: parsed });
+    const { lastFrame, stdin } = render(<DetailView agent={agent} isActive={true} />);
+    stdin.write('2'); // switch to errors
+    await new Promise((r) => setTimeout(r, 100));
+    stdin.write('1'); // switch back to all
+    await new Promise((r) => setTimeout(r, 100));
+    const frame = lastFrame()!;
+    expect(frame).toContain('[ALL]');
+    expect(frame).toContain('Error: something broke');
+    expect(frame).toContain('$ npm test');
+    expect(frame).toContain('just text');
+  });
 });
