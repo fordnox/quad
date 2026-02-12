@@ -19,7 +19,8 @@ This phase adds standard open-source project documentation including contributin
   - Add relevant keywords for discoverability
   <!-- Completed: description already present, added author "fordnox", kept ISC license, added repository URL from git remote, added 10 relevant keywords -->
 
-- [ ] Add license section to README.md:
+- [x] Add license section to README.md:
   - Include license badge at the top of README
   - Add "License" section at the bottom referencing the project's license
   - Note: The package.json currently shows ISC license
+  <!-- Completed: Added ISC license badge (shields.io) below the h1 heading, and added a "License" section at the bottom of README referencing the ISC license with a link to the OSI page -->

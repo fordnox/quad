@@ -1,5 +1,7 @@
 # Quad
 
+[![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
+
 A multi-agent Terminal User Interface (TUI) for orchestrating AI coding agents through a repeating **Plan → Code → Audit → Push** loop. Built with React, [Ink](https://github.com/vadimdemedes/ink), and TypeScript.
 
 Quad lets you run multiple AI agents (Claude Code, OpenCode, or custom commands) side-by-side in a 2×2 grid dashboard, manage their lifecycle, and coordinate them through structured development phases.
@@ -647,3 +649,7 @@ Quad logs warnings like `[quad-config] Validation warning: apiPort must be a num
 
 **How do I reset config to defaults?**
 Delete `~/.quad/config.json` and restart Quad. A fresh default config will be created automatically.
+
+## License
+
+This project is licensed under the [ISC License](https://opensource.org/licenses/ISC).
