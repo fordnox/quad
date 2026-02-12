@@ -38,7 +38,7 @@ This phase adds intelligent output parsing so QUAD can extract meaningful status
     - Standard status patterns similar to Claude parser but with different formatting
   - This parser can start minimal and be expanded as OpenCode's output format becomes better known
 
-- [ ] Create a generic fallback parser in `src/parsers/genericParser.ts`:
+- [x] Create a generic fallback parser in `src/parsers/genericParser.ts`: *(completed: pattern-based parser with priority ordering — detects test runner output (PASS/FAIL/✓/✗/test counts) as progress, git operations (commit/push/pull/merge/rebase/checkout/clone/fetch/add/stash/reset/diff/log) and npm/pnpm/yarn/bun commands as command type; reuses stripAnsi from claudeParser, skips empty/whitespace-only lines, provides truncated raw text as summary for unknown type — 47 tests passing)*
   - Catches common patterns not specific to any agent:
     - ANSI color code stripping utility
     - Git operation detection: "commit", "push", "pull", "merge" → type `command`
