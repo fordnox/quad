@@ -4,7 +4,7 @@ This phase transforms QUAD from a static demo into an interactive TUI where user
 
 ## Tasks
 
-- [ ] Create an Agent Registry store in `src/store/agentRegistry.ts`:
+- [x] Create an Agent Registry store in `src/store/agentRegistry.ts`:
   - Implement a simple in-memory store (plain object/Map, no external state library) that holds all `AgentState` entries keyed by `id`
   - Export functions: `addAgent(config: AgentConfig)`, `removeAgent(id: string)`, `getAgent(id: string)`, `getAllAgents()`, `updateAgent(id: string, partial: Partial<AgentState>)`
   - Create a React context `AgentRegistryContext` in `src/store/AgentRegistryProvider.tsx` that wraps the registry in React state so components re-render on changes

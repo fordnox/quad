@@ -2,20 +2,29 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import React from 'react';
 import { render } from 'ink-testing-library';
 import { App } from './App.js';
+import { AgentRegistryProvider } from '../store/AgentRegistryProvider.js';
 
 function wait(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function renderApp() {
+  return render(
+    <AgentRegistryProvider>
+      <App />
+    </AgentRegistryProvider>
+  );
+}
+
 describe('App', () => {
   it('renders the Grid with QUAD header', () => {
-    const { lastFrame, unmount } = render(<App />);
+    const { lastFrame, unmount } = renderApp();
     expect(lastFrame()).toContain('QUAD');
     unmount();
   });
 
   it('renders footer with keybinding hints', () => {
-    const { lastFrame, unmount } = render(<App />);
+    const { lastFrame, unmount } = renderApp();
     const frame = lastFrame()!;
     expect(frame).toContain('[q]');
     expect(frame).toContain('quit');
@@ -23,7 +32,7 @@ describe('App', () => {
   });
 
   it('shows both demo agent names after state propagation', async () => {
-    const { lastFrame, unmount } = render(<App />);
+    const { lastFrame, unmount } = renderApp();
 
     await wait(1500);
 
@@ -34,7 +43,7 @@ describe('App', () => {
   });
 
   it('auto-starts agents showing running status', async () => {
-    const { lastFrame, unmount } = render(<App />);
+    const { lastFrame, unmount } = renderApp();
 
     await wait(1500);
 
@@ -45,7 +54,7 @@ describe('App', () => {
   });
 
   it('shows agent count reflecting 2 demo agents', async () => {
-    const { lastFrame, unmount } = render(<App />);
+    const { lastFrame, unmount } = renderApp();
 
     await wait(1500);
 
@@ -55,7 +64,7 @@ describe('App', () => {
   });
 
   it('exits cleanly when q is pressed', async () => {
-    const { stdin, unmount } = render(<App />);
+    const { stdin, unmount } = renderApp();
 
     await wait(500);
     stdin.write('q');
@@ -66,7 +75,7 @@ describe('App', () => {
   });
 
   it('displays output from running agents', async () => {
-    const { lastFrame, unmount } = render(<App />);
+    const { lastFrame, unmount } = renderApp();
 
     await wait(2500);
 

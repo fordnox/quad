@@ -1,5 +1,10 @@
 import React from 'react';
 import { render } from 'ink';
 import { App } from './components/App.js';
+import { AgentRegistryProvider } from './store/AgentRegistryProvider.js';
 
-render(<App />);
+render(
+  <AgentRegistryProvider>
+    <App />
+  </AgentRegistryProvider>
+);

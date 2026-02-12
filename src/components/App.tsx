@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useCallback } from 'react';
 import { useApp, useInput, useStdin } from 'ink';
 import { Grid } from './Grid.js';
 import { useAgentProcess } from '../hooks/useAgentProcess.js';
+import { useAgentRegistry } from '../store/AgentRegistryProvider.js';
 import type { AgentConfig, AgentState } from '../types/agent.js';
 
 const demoConfigs: AgentConfig[] = [
@@ -61,23 +62,35 @@ function AgentRunner({ config, onState }: AgentRunnerProps) {
 export function App() {
   const { exit } = useApp();
   const { isRawModeSupported } = useStdin();
-  const [agentStates, setAgentStates] = React.useState<Map<string, AgentState>>(new Map());
+  const { agents, addAgent, updateAgent } = useAgentRegistry();
+
+  // Register demo agents on mount
+  const initializedRef = useRef(false);
+  useEffect(() => {
+    if (!initializedRef.current) {
+      initializedRef.current = true;
+      for (const config of demoConfigs) {
+        addAgent(config);
+      }
+    }
+  }, [addAgent]);
 
   const handleAgentState = useCallback((state: AgentState) => {
-    setAgentStates((prev) => {
-      const next = new Map(prev);
-      next.set(state.config.id, state);
-      return next;
+    updateAgent(state.config.id, {
+      status: state.status,
+      phase: state.phase,
+      output: state.output,
+      pid: state.pid,
+      startedAt: state.startedAt,
+      error: state.error,
     });
-  }, []);
+  }, [updateAgent]);
 
   useInput((input) => {
     if (input === 'q') {
       exit();
     }
   }, { isActive: isRawModeSupported === true });
-
-  const agents = Array.from(agentStates.values());
 
   return (
     <>
