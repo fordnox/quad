@@ -33,7 +33,8 @@ This phase sets up the entire project from scratch — TypeScript, pnpm, Ink (Re
   - `AgentConfig` — interface with fields: `id: string`, `name: string`, `type: AgentType`, `role: AgentRole`, `command: string`, `args: string[]`
   - `AgentState` — interface with fields: `config: AgentConfig`, `status: AgentStatus`, `phase: LoopPhase`, `output: string[]` (last N lines), `pid: number | null`, `startedAt: Date | null`, `error: string | null`
 
-- [ ] Create the `useAgentProcess` hook in `src/hooks/useAgentProcess.ts`:
+- [x] Create the `useAgentProcess` hook in `src/hooks/useAgentProcess.ts`:
+  <!-- Completed: Hook implemented with spawn-based process management. 8 vitest tests passing covering status transitions, output capture, stderr, 20-line limit, PID tracking, unmount cleanup, and duplicate-run prevention. Also added vitest as dev dependency with `pnpm test` script. -->
   - Accept an `AgentConfig` parameter
   - Use `spawn` from `child_process` with `{ shell: true }` to create a child process
   - Capture `stdout` and `stderr` data events, storing the last 20 lines of combined output in state
@@ -43,7 +44,8 @@ This phase sets up the entire project from scratch — TypeScript, pnpm, Ink (Re
   - Handle process `close` and `error` events to update status
   - Clean up the child process on component unmount using `useEffect` cleanup
 
-- [ ] Create the `AgentCard` component in `src/components/AgentCard.tsx`:
+- [x] Create the `AgentCard` component in `src/components/AgentCard.tsx`:
+  <!-- Completed: AgentCard component with bordered Box (round style), header with name/type/role badges via chalk, status indicator (ink-spinner when running, colored dot otherwise), phase label, scrollable output area, PID/elapsed footer, and status-based border colors. 14 vitest tests passing. -->
   - Accept an `AgentState` as props
   - Render a bordered `<Box>` (using Ink's `borderStyle="round"`) with:
     - A header line showing agent name, type badge, and role badge using `chalk` colors
