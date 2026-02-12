@@ -1,27 +1,39 @@
 import React, { useEffect, useRef, useCallback, useState } from 'react';
-import { useApp, useInput, useStdin } from 'ink';
+import { Box, Text, useApp, useInput, useStdin } from 'ink';
+import chalk from 'chalk';
 import { Grid } from './Grid.js';
+import { LoopStatusBar } from './LoopStatusBar.js';
+import { PhaseTransitionBanner } from './PhaseTransitionBanner.js';
 import { AddAgentForm } from './AddAgentForm.js';
 import { useAgentProcess } from '../hooks/useAgentProcess.js';
+import { useLoop } from '../hooks/useLoop.js';
 import { useFocus } from '../hooks/useFocus.js';
 import { useAgentRegistry } from '../store/AgentRegistryProvider.js';
 import type { AgentConfig, AgentState } from '../types/agent.js';
 
 const demoConfigs: AgentConfig[] = [
   {
-    id: 'demo-1',
-    name: 'Echo Agent',
+    id: 'demo-planner',
+    name: 'Planner',
     type: 'custom',
-    role: 'coder',
-    command: 'bash -c \'for i in $(seq 1 15); do echo "[Step $i/15] Processing task... $(date +%H:%M:%S)"; sleep 1; done; echo Done!\'',
+    role: 'planner',
+    command: 'bash -c \'for i in $(seq 1 5); do echo "[Plan $i/5] Analyzing requirements... $(date +%H:%M:%S)"; sleep 1; done; echo "Planning complete."\'',
     args: [],
   },
   {
-    id: 'demo-2',
-    name: 'Watch Agent',
+    id: 'demo-coder',
+    name: 'Coder',
+    type: 'custom',
+    role: 'coder',
+    command: 'bash -c \'for i in $(seq 1 6); do echo "[Code $i/6] Writing code... $(date +%H:%M:%S)"; sleep 1; done; echo "Coding complete."\'',
+    args: [],
+  },
+  {
+    id: 'demo-auditor',
+    name: 'Auditor',
     type: 'custom',
     role: 'auditor',
-    command: 'bash -c \'for i in $(seq 1 10); do echo "[Audit $i/10] Checking files... $((RANDOM % 100 + 1)) files scanned"; sleep 2; done; echo "Audit complete."\'',
+    command: 'bash -c \'for i in $(seq 1 4); do echo "[Audit $i/4] Checking files... $((RANDOM % 100 + 1)) files scanned"; sleep 1; done; echo "Audit complete."\'',
     args: [],
   },
 ];
@@ -77,6 +89,8 @@ export function App() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [killSignals, setKillSignals] = useState<Record<string, number>>({});
   const [runnerConfigs, setRunnerConfigs] = useState<AgentConfig[]>([]);
+
+  const { loopState, assignments, startLoop, pauseLoop, resumeLoop, resetLoop, onLoopEvent, offLoopEvent } = useLoop(agents);
 
   // Register demo agents on mount
   const initializedRef = useRef(false);
@@ -153,6 +167,26 @@ export function App() {
       return;
     }
 
+    // Loop controls
+    if (input === 'l') {
+      if (loopState.status === 'idle' || loopState.status === 'error') {
+        startLoop();
+      } else if (loopState.status === 'paused') {
+        resumeLoop();
+      }
+      return;
+    }
+
+    if (input === 'p') {
+      pauseLoop();
+      return;
+    }
+
+    if (input === 'L') {
+      resetLoop();
+      return;
+    }
+
     if (key.tab) {
       if (key.shift) {
         focusPrev(agentIds);
@@ -215,7 +249,20 @@ export function App() {
           killSignal={killSignals[config.id]}
         />
       ))}
-      <Grid agents={agents} focusedAgentId={focusedAgentId} detailMode={detailMode} />
+      <LoopStatusBar loopState={loopState} />
+      <PhaseTransitionBanner onLoopEvent={onLoopEvent} offLoopEvent={offLoopEvent} />
+      <Grid
+        agents={agents}
+        focusedAgentId={focusedAgentId}
+        detailMode={detailMode}
+        loopState={loopState}
+        assignments={assignments}
+      />
+      {loopState.status === 'idle' && (
+        <Box paddingX={1}>
+          <Text dimColor>Press {chalk.bold('[l]')} to start the loop</Text>
+        </Box>
+      )}
     </>
   );
 }

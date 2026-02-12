@@ -3,6 +3,10 @@ import React from 'react';
 import { render } from 'ink-testing-library';
 import { Grid } from './Grid.js';
 import type { AgentState, AgentConfig } from '../types/agent.js';
+import type { LoopState } from '../engine/loopStateMachine.js';
+import { resetLoop } from '../engine/loopStateMachine.js';
+import type { PhaseAssignments } from '../engine/loopOrchestrator.js';
+import { createPhaseAssignments } from '../engine/loopOrchestrator.js';
 
 const makeConfig = (overrides?: Partial<AgentConfig>): AgentConfig => ({
   id: 'test-1',
@@ -100,6 +104,17 @@ describe('Grid', () => {
     expect(frame).toContain('kill focused');
     expect(frame).toContain('[r]');
     expect(frame).toContain('restart');
+  });
+
+  it('renders footer with loop control hints', () => {
+    const { lastFrame } = render(<Grid agents={[]} />);
+    const frame = lastFrame()!;
+    expect(frame).toContain('[l]');
+    expect(frame).toContain('loop');
+    expect(frame).toContain('[p]');
+    expect(frame).toContain('pause');
+    expect(frame).toContain('[L]');
+    expect(frame).toContain('reset loop');
   });
 
   it('renders without errors for empty agents array', () => {
@@ -249,5 +264,37 @@ describe('Grid', () => {
     expect(frame).toContain('Hello from agent');
     expect(frame).toContain('Processing task');
     expect(frame).toContain('OutputAgent');
+  });
+
+  it('passes assignedPhase to AgentCard when assignments are provided', () => {
+    const assignments: PhaseAssignments = {
+      ...createPhaseAssignments(),
+      code: ['a1'],
+    };
+    const loopState: LoopState = {
+      ...resetLoop(),
+      status: 'running',
+      currentPhase: 'code',
+      phaseStartedAt: new Date(),
+    };
+    const agents = [
+      makeState({ config: makeConfig({ id: 'a1', name: 'Coder', role: 'coder' }) }),
+    ];
+    const { lastFrame } = render(
+      <Grid agents={agents} loopState={loopState} assignments={assignments} />
+    );
+    const frame = lastFrame()!;
+    // The agent card should show the active phase indicator
+    expect(frame).toContain('CODE');
+  });
+
+  it('renders without loopState and assignments (backwards compatible)', () => {
+    const agents = [
+      makeState({ config: makeConfig({ id: 'a1', name: 'Alpha' }) }),
+    ];
+    const { lastFrame } = render(<Grid agents={agents} />);
+    const frame = lastFrame()!;
+    expect(frame).toContain('Alpha');
+    expect(frame).toContain('GRID VIEW');
   });
 });

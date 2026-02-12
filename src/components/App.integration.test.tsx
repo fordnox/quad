@@ -34,8 +34,9 @@ describe('App Integration: Interactive Features', () => {
 
     // Initially no focus indicator
     let frame = lastFrame()!;
-    expect(frame).toContain('Echo Agent');
-    expect(frame).toContain('Watch Agent');
+    expect(frame).toContain('Planner');
+    expect(frame).toContain('Coder');
+    expect(frame).toContain('Auditor');
 
     // Press Tab to focus first agent
     stdin.write(KEYS.TAB);
@@ -117,9 +118,10 @@ describe('App Integration: Interactive Features', () => {
 
     frame = lastFrame()!;
     expect(frame).toContain('GRID VIEW');
-    // Should still show both agents
-    expect(frame).toContain('Echo Agent');
-    expect(frame).toContain('Watch Agent');
+    // Should still show all agents
+    expect(frame).toContain('Planner');
+    expect(frame).toContain('Coder');
+    expect(frame).toContain('Auditor');
 
     unmount();
   });
@@ -216,7 +218,7 @@ describe('App Integration: Interactive Features', () => {
     // Should be back in grid view with the new agent
     frame = lastFrame()!;
     expect(frame).toContain('GRID VIEW');
-    expect(frame).toContain('3 agents');
+    expect(frame).toContain('4 agents');
 
     unmount();
   });
@@ -238,7 +240,7 @@ describe('App Integration: Interactive Features', () => {
 
     frame = lastFrame()!;
     expect(frame).toContain('GRID VIEW');
-    expect(frame).toContain('2 agents');
+    expect(frame).toContain('3 agents');
 
     unmount();
   });
@@ -341,9 +343,9 @@ describe('App Integration: Interactive Features', () => {
 
     const frame = lastFrame()!;
     expect(frame).toContain('DETAIL:');
-    expect(frame).toContain('Echo Agent');
-    // Should show output from the echo agent
-    expect(frame).toMatch(/Step \d+\/15/);
+    expect(frame).toContain('Planner');
+    // Should show output from the planner agent
+    expect(frame).toMatch(/Plan \d+\/5/);
 
     unmount();
   });
@@ -360,7 +362,7 @@ describe('App Integration: Interactive Features', () => {
     const frame = lastFrame()!;
     // Grid should still be shown, all agents running
     expect(frame).toContain('GRID VIEW');
-    expect(frame).toContain('2 running');
+    expect(frame).toContain('3 running');
 
     unmount();
   });

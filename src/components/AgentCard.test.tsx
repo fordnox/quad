@@ -162,4 +162,55 @@ describe('AgentCard', () => {
     expect(frame).not.toContain('▶');
     expect(frame).toContain('Normal Agent');
   });
+
+  it('shows assigned phase when provided', () => {
+    const agent = makeState({ config: makeConfig({ role: 'coder' }) });
+    const { lastFrame } = render(
+      <AgentCard agent={agent} width={50} height={15} assignedPhase="code" />
+    );
+    const frame = lastFrame()!;
+    expect(frame).toContain('CODE');
+  });
+
+  it('shows active phase indicator with ▸ when active in current phase', () => {
+    const agent = makeState({ config: makeConfig({ role: 'planner' }) });
+    const { lastFrame } = render(
+      <AgentCard agent={agent} width={50} height={15} assignedPhase="plan" activeInCurrentPhase={true} />
+    );
+    const frame = lastFrame()!;
+    expect(frame).toContain('▸');
+    expect(frame).toContain('PLAN');
+  });
+
+  it('shows dimmed assigned phase when not active in current phase', () => {
+    const agent = makeState({ config: makeConfig({ role: 'auditor' }) });
+    const { lastFrame } = render(
+      <AgentCard agent={agent} width={50} height={15} assignedPhase="audit" activeInCurrentPhase={false} />
+    );
+    const frame = lastFrame()!;
+    // Should show AUDIT but not with the active indicator
+    expect(frame).toContain('AUDIT');
+    expect(frame).not.toContain('▸');
+  });
+
+  it('does not show assigned phase when not provided', () => {
+    const agent = makeState();
+    const { lastFrame } = render(<AgentCard agent={agent} width={50} height={15} />);
+    const frame = lastFrame()!;
+    // Should only contain the phase label [IDLE], not any assigned phase label
+    expect(frame).toContain('[IDLE]');
+    expect(frame).not.toContain('▸');
+  });
+
+  it('renders all phase assignments without errors', () => {
+    const phases = ['plan', 'code', 'audit', 'push'] as const;
+    for (const phase of phases) {
+      const agent = makeState();
+      const { lastFrame } = render(
+        <AgentCard agent={agent} width={50} height={15} assignedPhase={phase} activeInCurrentPhase={true} />
+      );
+      expect(lastFrame()).toBeTruthy();
+      expect(lastFrame()).toContain(phase.toUpperCase());
+    }
+  });
 });

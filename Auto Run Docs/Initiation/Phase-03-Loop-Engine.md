@@ -49,14 +49,14 @@ This phase implements the heart of QUAD: the continuous **Plan → Code → Audi
   - Display elapsed time for the current phase
   - Show loop status: `RUNNING`, `PAUSED`, `IDLE`, or `ERROR` with appropriate colors
 
-- [ ] Create a `PhaseTransitionBanner` component in `src/components/PhaseTransitionBanner.tsx`:
+- [x] Create a `PhaseTransitionBanner` component in `src/components/PhaseTransitionBanner.tsx`:
   - A brief, eye-catching notification that appears for 2-3 seconds when the loop advances to a new phase
   - Display: `→ Entering CODE phase` (with the phase name in its signature color)
   - On loop completion (push → plan restart): display `✓ Cycle #N complete — restarting loop`
   - On failure: display `✗ AUDIT phase failed — loop paused`
   - Use a timer (`setTimeout` via `useEffect`) to auto-dismiss after display
 
-- [ ] Integrate the loop engine into `App.tsx` and the Grid:
+- [x] Integrate the loop engine into `App.tsx` and the Grid:
   - Add `useLoop` to the App component
   - Pass `loopState` to `<LoopStatusBar>` rendered above the grid
   - Pass `loopState` to `<Grid>` so `<AgentCard>` can show which phase each agent belongs to

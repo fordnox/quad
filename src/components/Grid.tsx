@@ -3,12 +3,16 @@ import { Box, Text } from 'ink';
 import chalk from 'chalk';
 import { AgentCard } from './AgentCard.js';
 import { DetailView } from './DetailView.js';
-import type { AgentState, AgentStatus } from '../types/agent.js';
+import type { AgentState, AgentStatus, LoopPhase } from '../types/agent.js';
+import type { LoopState } from '../engine/loopStateMachine.js';
+import type { PhaseAssignments } from '../engine/loopOrchestrator.js';
 
 export interface GridProps {
   agents: AgentState[];
   focusedAgentId?: string | null;
   detailMode?: boolean;
+  loopState?: LoopState;
+  assignments?: PhaseAssignments;
 }
 
 const statusLabels: AgentStatus[] = ['running', 'idle', 'finished', 'error'];
@@ -28,7 +32,18 @@ function buildStatusSummary(agents: AgentState[]): string {
   return parts.join(', ');
 }
 
-export function Grid({ agents, focusedAgentId = null, detailMode = false }: GridProps) {
+/** Find the loop phase an agent is assigned to based on the assignments map. */
+function getAgentAssignedPhase(agentId: string, assignments?: PhaseAssignments): LoopPhase | null {
+  if (!assignments) return null;
+  for (const phase of ['plan', 'code', 'audit', 'push'] as LoopPhase[]) {
+    if (assignments[phase].includes(agentId)) {
+      return phase;
+    }
+  }
+  return null;
+}
+
+export function Grid({ agents, focusedAgentId = null, detailMode = false, loopState, assignments }: GridProps) {
   const termWidth = process.stdout.columns || 80;
   const termHeight = process.stdout.rows || 24;
 
@@ -59,21 +74,27 @@ export function Grid({ agents, focusedAgentId = null, detailMode = false }: Grid
 
       {/* Agent grid */}
       <Box flexWrap="wrap">
-        {agents.map((agent) => (
-          <AgentCard
-            key={agent.config.id}
-            agent={agent}
-            width={cardWidth}
-            height={cardHeight}
-            focused={agent.config.id === focusedAgentId}
-          />
-        ))}
+        {agents.map((agent) => {
+          const assignedPhase = getAgentAssignedPhase(agent.config.id, assignments);
+          const isActiveInPhase = loopState?.status === 'running' && assignedPhase === loopState.currentPhase;
+          return (
+            <AgentCard
+              key={agent.config.id}
+              agent={agent}
+              width={cardWidth}
+              height={cardHeight}
+              focused={agent.config.id === focusedAgentId}
+              assignedPhase={assignedPhase}
+              activeInCurrentPhase={isActiveInPhase ?? false}
+            />
+          );
+        })}
       </Box>
 
       {/* Footer bar */}
       <Box paddingX={1}>
         <Text dimColor>
-          {chalk.bold('[q]')} quit  {chalk.bold('[a]')} add agent  {chalk.bold('[Tab]')} focus  {chalk.bold('[Enter]')} detail  {chalk.bold('[k]')} kill focused  {chalk.bold('[r]')} restart
+          {chalk.bold('[q]')} quit  {chalk.bold('[a]')} add agent  {chalk.bold('[Tab]')} focus  {chalk.bold('[Enter]')} detail  {chalk.bold('[k]')} kill focused  {chalk.bold('[r]')} restart  {chalk.bold('[l]')} loop  {chalk.bold('[p]')} pause  {chalk.bold('[L]')} reset loop
         </Text>
       </Box>
     </Box>

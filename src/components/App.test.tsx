@@ -31,14 +31,15 @@ describe('App', () => {
     unmount();
   });
 
-  it('shows both demo agent names after state propagation', async () => {
+  it('shows demo agent names after state propagation', async () => {
     const { lastFrame, unmount } = renderApp();
 
     await wait(1500);
 
     const frame = lastFrame()!;
-    expect(frame).toContain('Echo Agent');
-    expect(frame).toContain('Watch Agent');
+    expect(frame).toContain('Planner');
+    expect(frame).toContain('Coder');
+    expect(frame).toContain('Auditor');
     unmount();
   });
 
@@ -53,13 +54,13 @@ describe('App', () => {
     unmount();
   });
 
-  it('shows agent count reflecting 2 demo agents', async () => {
+  it('shows agent count reflecting 3 demo agents', async () => {
     const { lastFrame, unmount } = renderApp();
 
     await wait(1500);
 
     const frame = lastFrame()!;
-    expect(frame).toContain('2 agents');
+    expect(frame).toContain('3 agents');
     unmount();
   });
 
@@ -80,8 +81,36 @@ describe('App', () => {
     await wait(2500);
 
     const frame = lastFrame()!;
-    // Echo Agent produces "[Step X/15]" lines
-    expect(frame).toMatch(/Step \d+\/15/);
+    // Planner agent produces "[Plan X/5]" lines
+    expect(frame).toMatch(/Plan \d+\/5/);
+    unmount();
+  });
+
+  it('renders LoopStatusBar', () => {
+    const { lastFrame, unmount } = renderApp();
+    const frame = lastFrame()!;
+    // LoopStatusBar shows phase segments and IDLE status
+    expect(frame).toContain('IDLE');
+    expect(frame).toContain('Cycle #0');
+    unmount();
+  });
+
+  it('shows helpful start message when loop is idle', () => {
+    const { lastFrame, unmount } = renderApp();
+    const frame = lastFrame()!;
+    expect(frame).toContain('start the loop');
+    unmount();
+  });
+
+  it('renders footer with loop control hints', () => {
+    const { lastFrame, unmount } = renderApp();
+    const frame = lastFrame()!;
+    expect(frame).toContain('[l]');
+    expect(frame).toContain('loop');
+    expect(frame).toContain('[p]');
+    expect(frame).toContain('pause');
+    expect(frame).toContain('[L]');
+    expect(frame).toContain('reset loop');
     unmount();
   });
 });

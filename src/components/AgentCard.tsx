@@ -2,13 +2,15 @@ import React from 'react';
 import { Box, Text } from 'ink';
 import Spinner from 'ink-spinner';
 import chalk from 'chalk';
-import type { AgentState, AgentStatus } from '../types/agent.js';
+import type { AgentState, AgentStatus, LoopPhase } from '../types/agent.js';
 
 export interface AgentCardProps {
   agent: AgentState;
   width?: number;
   height?: number;
   focused?: boolean;
+  assignedPhase?: LoopPhase | null;
+  activeInCurrentPhase?: boolean;
 }
 
 const borderColorMap: Record<AgentStatus, string> = {
@@ -38,6 +40,13 @@ const roleBadgeColor: Record<string, (s: string) => string> = {
   custom: chalk.white,
 };
 
+const phaseColorMap: Record<string, (s: string) => string> = {
+  plan: chalk.yellow,
+  code: chalk.green,
+  audit: chalk.blue,
+  push: chalk.magenta,
+};
+
 function formatElapsed(startedAt: Date | null): string {
   if (!startedAt) return '--:--';
   const elapsed = Math.floor((Date.now() - startedAt.getTime()) / 1000);
@@ -46,7 +55,7 @@ function formatElapsed(startedAt: Date | null): string {
   return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 }
 
-export function AgentCard({ agent, width, height, focused = false }: AgentCardProps) {
+export function AgentCard({ agent, width, height, focused = false, assignedPhase = null, activeInCurrentPhase = false }: AgentCardProps) {
   const { config, status, phase, output, pid, startedAt } = agent;
 
   const cardWidth = width ?? Math.floor((process.stdout.columns || 80) / 2);
@@ -59,6 +68,17 @@ export function AgentCard({ agent, width, height, focused = false }: AgentCardPr
   const roleBadge = (roleBadgeColor[config.role] ?? chalk.white)(`[${config.role}]`);
 
   const phaseLabel = `[${phase.toUpperCase()}]`;
+
+  // Build the assigned-phase label with active indicator
+  let assignedPhaseLabel = '';
+  if (assignedPhase) {
+    const colorFn = phaseColorMap[assignedPhase] ?? chalk.white;
+    if (activeInCurrentPhase) {
+      assignedPhaseLabel = colorFn(chalk.bold(`▸ ${assignedPhase.toUpperCase()}`));
+    } else {
+      assignedPhaseLabel = chalk.dim(assignedPhase.toUpperCase());
+    }
+  }
 
   const statusIndicator =
     status === 'running' ? (
@@ -96,6 +116,7 @@ export function AgentCard({ agent, width, height, focused = false }: AgentCardPr
         <Text bold color={status === 'running' ? 'green' : status === 'error' ? 'red' : undefined}>
           {phaseLabel}
         </Text>
+        {assignedPhaseLabel ? <Text>{assignedPhaseLabel}</Text> : null}
       </Box>
 
       {/* Output area */}
