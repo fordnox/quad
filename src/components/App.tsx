@@ -5,9 +5,11 @@ import { Grid } from './Grid.js';
 import { LoopStatusBar } from './LoopStatusBar.js';
 import { PhaseTransitionBanner } from './PhaseTransitionBanner.js';
 import { AddAgentForm } from './AddAgentForm.js';
+import { BridgeStatus } from './BridgeStatus.js';
 import { useAgentProcess } from '../hooks/useAgentProcess.js';
 import { useLoop } from '../hooks/useLoop.js';
 import { useFocus } from '../hooks/useFocus.js';
+import { useBridge } from '../hooks/useBridge.js';
 import { useAgentRegistry } from '../store/AgentRegistryProvider.js';
 import type { AgentConfig, AgentState } from '../types/agent.js';
 import { demoConfigs } from '../utils/demoAgents.js';
@@ -67,6 +69,23 @@ export function App() {
   const [runnerConfigs, setRunnerConfigs] = useState<AgentConfig[]>([]);
 
   const { loopState, assignments, startLoop, pauseLoop, resumeLoop, resetLoop, onLoopEvent, offLoopEvent } = useLoop(agents);
+
+  const handleBridgeAgentAdded = useCallback((config: AgentConfig) => {
+    setRunnerConfigs((prev) => [...prev, config]);
+  }, []);
+
+  const { apiPort, jobFilePath, apiRequestCount } = useBridge({
+    agents,
+    getAgent: (id: string) => agents.find((a) => a.config.id === id),
+    getAllAgents: () => agents,
+    addAgent,
+    removeAgent,
+    loopState,
+    startLoop,
+    pauseLoop,
+    resetLoop,
+    onAgentAdded: handleBridgeAgentAdded,
+  });
 
   // Register demo agents on mount
   const initializedRef = useRef(false);
@@ -241,6 +260,7 @@ export function App() {
           <Text dimColor>Press {chalk.bold('[l]')} to start the loop</Text>
         </Box>
       )}
+      <BridgeStatus apiPort={apiPort} jobFilePath={jobFilePath} apiRequestCount={apiRequestCount} />
     </>
   );
 }

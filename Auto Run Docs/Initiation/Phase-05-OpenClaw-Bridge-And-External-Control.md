@@ -53,7 +53,7 @@ This phase builds the bridge that allows external systems — primarily OpenClaw
   - Provides: `{ apiPort: number, jobFilePath: string, apiRequestCount: number }`
   - Cleans up watchers and server on unmount
 
-- [ ] Integrate the bridge into `App.tsx` and add a connection status indicator:
+- [x] Integrate the bridge into `App.tsx` and add a connection status indicator: *(Completed: BridgeStatus component in src/components/BridgeStatus.tsx with API status, job file path, and request count display; useBridge integrated into App.tsx with full dependency wiring including onAgentAdded callback for runner configs; BridgeStatus rendered in footer area; bridge starts automatically on mount — 9 tests passing)*
   - Add `useBridge` to the App component
   - Create a `BridgeStatus` component in `src/components/BridgeStatus.tsx`:
     - A small status line in the footer area showing:
