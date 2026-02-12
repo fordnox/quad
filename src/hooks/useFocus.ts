@@ -7,6 +7,7 @@ export interface UseFocusResult {
   focusPrev: (agentIds: string[]) => void;
   toggleDetail: () => void;
   clearFocus: () => void;
+  setFocus: (agentId: string) => void;
 }
 
 export function useFocus(): UseFocusResult {
@@ -42,6 +43,10 @@ export function useFocus(): UseFocusResult {
     setFocusedAgentId(null);
   }, []);
 
+  const setFocus = useCallback((agentId: string) => {
+    setFocusedAgentId(agentId);
+  }, []);
+
   return {
     focusedAgentId,
     detailMode,
@@ -49,5 +54,6 @@ export function useFocus(): UseFocusResult {
     focusPrev,
     toggleDetail,
     clearFocus,
+    setFocus,
   };
 }

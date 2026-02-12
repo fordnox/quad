@@ -17,6 +17,7 @@ export function useAgentProcess(config: AgentConfig): UseAgentProcessResult {
   const [status, setStatus] = useState<AgentStatus>('idle');
   const [pid, setPid] = useState<number | null>(null);
   const childRef = useRef<ChildProcess | null>(null);
+  const killedRef = useRef(false);
 
   const appendOutput = useCallback((data: string) => {
     const lines = data.toString().split('\n').filter((line) => line.length > 0);
@@ -32,6 +33,7 @@ export function useAgentProcess(config: AgentConfig): UseAgentProcessResult {
 
     setStatus('running');
     setOutput([]);
+    killedRef.current = false;
 
     const child = spawn(config.command, config.args, { shell: true });
     childRef.current = child;
@@ -47,6 +49,7 @@ export function useAgentProcess(config: AgentConfig): UseAgentProcessResult {
 
     child.on('close', (code) => {
       childRef.current = null;
+      if (killedRef.current) return;
       setStatus(code === 0 ? 'finished' : 'error');
     });
 
@@ -59,6 +62,7 @@ export function useAgentProcess(config: AgentConfig): UseAgentProcessResult {
 
   const kill = useCallback(() => {
     if (childRef.current) {
+      killedRef.current = true;
       childRef.current.kill('SIGTERM');
       childRef.current = null;
       setStatus('finished');

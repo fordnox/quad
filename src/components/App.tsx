@@ -73,7 +73,7 @@ export function App() {
   const { exit } = useApp();
   const { isRawModeSupported } = useStdin();
   const { agents, addAgent, updateAgent, removeAgent } = useAgentRegistry();
-  const { focusedAgentId, detailMode, focusNext, focusPrev, toggleDetail, clearFocus } = useFocus();
+  const { focusedAgentId, detailMode, focusNext, focusPrev, toggleDetail, clearFocus, setFocus } = useFocus();
   const [showAddForm, setShowAddForm] = useState(false);
   const [killSignals, setKillSignals] = useState<Record<string, number>>({});
   const [runnerConfigs, setRunnerConfigs] = useState<AgentConfig[]>([]);
@@ -133,8 +133,9 @@ export function App() {
       setRunnerConfigs((prev) => prev.filter((c) => c.id !== agentId));
       addAgent(newConfig);
       setRunnerConfigs((prev) => [...prev, newConfig]);
+      setFocus(newConfig.id);
     }, 100);
-  }, [agents, handleKillAgent, removeAgent, addAgent]);
+  }, [agents, handleKillAgent, removeAgent, addAgent, setFocus]);
 
   const agentIds = agents.map((a) => a.config.id);
 

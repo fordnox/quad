@@ -60,7 +60,10 @@ This phase transforms QUAD from a static demo into an interactive TUI where user
   - Update the header bar to show the current mode: `GRID VIEW` or `DETAIL: [Agent Name]`
   - Update the footer bar to show context-appropriate keybinding hints
 
-- [ ] Run the application and verify the interactive features:
+- [x] Run the application and verify the interactive features:
+  - **Completed**: All interactive features verified via comprehensive integration tests (15 tests) and live app run. Two bugs found and fixed:
+    1. **Kill status bug**: Killed agents showed "error" instead of "finished" due to SIGTERM's `close` event overwriting the status. Fixed by adding a `killedRef` flag in `useAgentProcess.ts` to suppress the close handler after intentional kills.
+    2. **Restart focus bug**: Focus was lost after restarting an agent because the new agent gets a new ID. Fixed by adding `setFocus()` to the `useFocus` hook and calling it in `handleRestartAgent` to transfer focus to the restarted agent.
   - Press `a` to open the add-agent form, create a new custom agent, verify it appears in the grid
   - Press `Tab` to cycle focus between agents, verify the highlight moves
   - Press `Enter` on a focused agent to open detail view, verify full output is visible
