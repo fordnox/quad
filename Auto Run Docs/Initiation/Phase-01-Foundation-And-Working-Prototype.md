@@ -57,7 +57,8 @@ This phase sets up the entire project from scratch — TypeScript, pnpm, Ink (Re
     - `idle` → gray, `running` → green, `finished` → blue, `error` → red
   - Set the card to a fixed width (roughly 1/2 terminal width) and a fixed height (roughly 1/2 terminal height) so 4 cards fill the screen
 
-- [ ] Create the `Grid` layout component in `src/components/Grid.tsx`:
+- [x] Create the `Grid` layout component in `src/components/Grid.tsx`:
+  <!-- Completed: Grid component renders header bar (bold "QUAD" title + agent count with per-status summary), flexWrap agent card grid using AgentCard with responsive sizing, and footer with keybinding hints. 12 vitest tests passing covering header, counts, singular/plural labels, status summaries, footer keybindings, multi-agent rendering, and unique key usage. -->
   - Accept an array of `AgentState` objects
   - Render a `<Box>` with `flexWrap="wrap"` containing one `<AgentCard>` per agent
   - Include a header bar at the top showing:
@@ -65,7 +66,8 @@ This phase sets up the entire project from scratch — TypeScript, pnpm, Ink (Re
     - Total agent count and per-status counts (e.g., "3 running, 1 idle")
   - Include a footer bar showing keybinding hints: `[q] quit  [a] add agent  [k] kill focused`
 
-- [ ] Create the main `App` component in `src/components/App.tsx` and the entry point `src/app.tsx`:
+- [x] Create the main `App` component in `src/components/App.tsx` and the entry point `src/app.tsx`:
+  <!-- Completed: App component with 2 demo agents (Echo Agent coder, Watch Agent auditor), AgentRunner sub-component using useAgentProcess hooks with proper startedAt tracking, useInput for 'q' to quit, state aggregation via Map, and Grid rendering. Entry point src/app.tsx renders App via Ink. 7 vitest tests passing covering header/footer rendering, agent name display, auto-start running status, agent count, q-key exit, and live output verification. Demo commands use shell-compatible quoting for spawn with shell:true. -->
   - `src/components/App.tsx`:
     - Initialize state with 2 demo agents using hardcoded configs:
       - Agent 1: `{ id: "demo-1", name: "Echo Agent", type: "custom", role: "coder", command: "bash", args: ["-c", "for i in $(seq 1 15); do echo \"[Step $i/15] Processing task... $(date +%H:%M:%S)\"; sleep 1; done; echo 'Done!'"] }`
