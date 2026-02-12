@@ -11,11 +11,12 @@ This phase adds visual polish and helpful context to the README, making it more 
   - Add a "What You'll See" section describing the status indicators and colors
   <!-- Completed: Added "What You'll See" section after Quick Start with detailed ASCII art grid display, status indicator table, color-coded output guide, agent type/role badge reference, loop status bar explanation, and full demo agent output samples for all three demo agents (Claude Agent, OpenCode Agent, Git Push). All 1298 existing tests pass. -->
 
-- [ ] Document the agent configuration system:
+- [x] Document the agent configuration system:
   - Add "Understanding Agents" section explaining AgentConfig structure
   - Show example of how to modify demo agents in src/components/App.tsx
   - Explain the different agent roles (coder, auditor, planner, etc.) and statuses
   - Include tips on creating custom agents with different commands
+  <!-- Completed: Added comprehensive "Understanding Agents" section to README.md between "The Loop" and "Configuration" sections. Includes: AgentConfig TypeScript interface with all 6 fields documented, Agent Types table mapping types to parsers, Agent Roles table with loop phase mapping and purpose descriptions, Agent Statuses table, demo agent modification example showing how to change roles in demoConfigs, and a full "Creating Custom Agents" subsection with defaultAgents config.json example (3 agents: Claude coder, ESLint auditor, test runner reviewer) plus 5 practical tips on type selection, role matching, shell commands, args usage, and HTTP API agent creation. All 1298 existing tests pass. -->
 
 - [ ] Add keyboard shortcuts and controls section:
   - Document the 'q' key to quit the application

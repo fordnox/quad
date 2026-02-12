@@ -271,6 +271,129 @@ Quad's core workflow is a four-phase loop:
 
 Phases with no assigned agents are skipped automatically. When all agents in a phase finish, the loop advances. After Push completes, the cycle counter increments and the loop restarts from Plan.
 
+### Understanding Agents
+
+Every agent in Quad is defined by an `AgentConfig` object with six fields:
+
+```typescript
+interface AgentConfig {
+  id: string;       // Unique identifier (auto-generated, e.g. "agent-3-1707796800000")
+  name: string;     // Display name shown in the card header
+  type: AgentType;  // 'claude' | 'opencode' | 'custom'
+  role: AgentRole;  // 'coder' | 'auditor' | 'planner' | 'reviewer' | 'custom'
+  command: string;  // Shell command to execute (e.g. "claude", "opencode", "bash -c '...'")
+  args: string[];   // Additional command-line arguments
+}
+```
+
+#### Agent Types
+
+The `type` field determines which output parser colorizes the agent's terminal output:
+
+| Type | Parser | Best For |
+|------|--------|----------|
+| `claude` | Claude Code parser + generic | Running the `claude` CLI |
+| `opencode` | OpenCode parser + generic | Running the `opencode` CLI |
+| `custom` | Generic parser only | Shell scripts, git, linters, any other command |
+
+#### Agent Roles and Loop Phases
+
+The `role` field determines **when** an agent runs in the loop. Each role maps to a loop phase:
+
+| Role | Loop Phase | Purpose |
+|------|-----------|---------|
+| `planner` | Plan | Design tasks, break down requirements, create implementation plans |
+| `coder` | Code | Write, edit, and generate source code |
+| `auditor` | Audit | Review code quality, run linters, check for issues |
+| `reviewer` | Audit | Peer review, validate changes, run test suites |
+| `custom` | Code | General-purpose — defaults to the Code phase |
+
+When the loop reaches a phase, **all** agents assigned to that phase run concurrently. The loop waits for every agent in the current phase to finish before advancing.
+
+#### Agent Statuses
+
+Each agent has a runtime status that reflects its process state:
+
+| Status | Meaning |
+|--------|---------|
+| `idle` | Waiting to run — not yet started or waiting for its loop phase |
+| `running` | Process is active and producing output |
+| `finished` | Process completed successfully (exit code 0) |
+| `error` | Process failed or crashed — auto-restarts up to 3 times |
+
+#### Modifying Demo Agents
+
+The demo agents are defined in `src/utils/demoAgents.ts`. Each one is a standard `AgentConfig` with a scripted bash command that simulates output. Here's how the Claude demo agent is configured:
+
+```typescript
+{
+  id: 'demo-claude',
+  name: 'Claude Agent',
+  type: 'claude',
+  role: 'coder',
+  command: buildScript(claudeDemoScript),  // generates a bash -c '...' command
+  args: [],
+}
+```
+
+To modify the demo agents, edit the `demoConfigs` array in that file. For example, to change the Claude agent's role from `coder` to `planner`:
+
+```typescript
+{
+  id: 'demo-claude',
+  name: 'Claude Planner',
+  type: 'claude',
+  role: 'planner',        // now runs during the Plan phase instead of Code
+  command: buildScript(claudeDemoScript),
+  args: [],
+}
+```
+
+Demo agents are loaded in `src/components/App.tsx` when the `--demo` flag is passed. The `App` component iterates over `demoConfigs` and registers each one on mount.
+
+#### Creating Custom Agents
+
+You can add agents interactively by pressing `a` in the TUI, or define them in your config file at `~/.quad/config.json` under the `defaultAgents` array:
+
+```json
+{
+  "defaultAgents": [
+    {
+      "id": "my-claude",
+      "name": "My Claude",
+      "type": "claude",
+      "role": "coder",
+      "command": "claude",
+      "args": []
+    },
+    {
+      "id": "my-linter",
+      "name": "ESLint Check",
+      "type": "custom",
+      "role": "auditor",
+      "command": "npx eslint src/ --format compact",
+      "args": []
+    },
+    {
+      "id": "my-tests",
+      "name": "Test Runner",
+      "type": "custom",
+      "role": "reviewer",
+      "command": "pnpm test",
+      "args": []
+    }
+  ]
+}
+```
+
+Tips for custom agents:
+
+- **Use `custom` type** for anything that isn't the `claude` or `opencode` CLI — the generic parser handles common output patterns like test results, git commands, and errors.
+- **Match the role to the workflow stage** where the agent should run. A linter is an `auditor`; a test suite is a `reviewer`; a code generator is a `coder`.
+- **The `command` field runs in a shell**, so you can use pipes, redirects, and chained commands (e.g. `bash -c 'npm run lint && npm run test'`).
+- **The `args` field** is passed as additional arguments to the command. For most use cases, put everything in `command` and leave `args` as `[]`.
+- **You can also add agents at runtime** via the HTTP API: `POST /agents` with a JSON body matching the `AgentConfig` structure.
+
 ### Configuration
 
 Quad creates a default config at `~/.quad/config.json` on first run. Key options:
