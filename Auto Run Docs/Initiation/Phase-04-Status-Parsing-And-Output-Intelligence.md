@@ -30,7 +30,7 @@ This phase adds intelligent output parsing so QUAD can extract meaningful status
     - Tool usage: lines mentioning "Read", "Edit", "Bash", "Search", "Grep" → type `info`
   - Extract a concise `summary` from each matched line (strip ANSI codes, truncate to ~60 chars)
 
-- [ ] Create an OpenCode output parser in `src/parsers/opencodeParser.ts`:
+- [x] Create an OpenCode output parser in `src/parsers/opencodeParser.ts`: *(completed: pattern-based parser with priority ordering — detects progress, errors, commands, code writing, status indicators, plus OpenCode-specific model/provider detection (gpt-4, claude, gemini, deepseek, etc.) and token/cost tracking; reuses stripAnsi from claudeParser, truncates summaries to ~60 chars — 49 tests passing)*
   - Implement `OutputParser` for OpenCode CLI output patterns
   - Since OpenCode is provider-agnostic, parse more generic patterns:
     - Model/provider indicators: lines mentioning model names or provider APIs → type `info`
