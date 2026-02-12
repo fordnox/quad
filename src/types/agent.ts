@@ -1,3 +1,5 @@
+import type { ParsedOutput } from '../parsers/outputParser.js';
+
 export type AgentType = 'claude' | 'opencode' | 'custom';
 
 export type AgentStatus = 'idle' | 'running' | 'finished' | 'error';
@@ -20,6 +22,8 @@ export interface AgentState {
   status: AgentStatus;
   phase: LoopPhase;
   output: string[];
+  parsedOutput: ParsedOutput[];
+  currentActivity: string | null;
   pid: number | null;
   startedAt: Date | null;
   error: string | null;

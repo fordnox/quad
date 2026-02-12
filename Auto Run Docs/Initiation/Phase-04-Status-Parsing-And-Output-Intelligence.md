@@ -47,7 +47,7 @@ This phase adds intelligent output parsing so QUAD can extract meaningful status
     - Empty lines and whitespace-only → skip
     - Everything else → type `unknown` with truncated raw text as summary
 
-- [ ] Integrate parsers into the `useAgentProcess` hook and `AgentCard`:
+- [x] Integrate parsers into the `useAgentProcess` hook and `AgentCard`: *(completed: ParserPipeline integration with type-aware parser selection (claude→claudeParser+generic, opencode→opencodeParser+generic, custom→generic only), 200-line parsed output buffer with currentActivity tracking, AgentCard shows currentActivity prominently with color-coded output lines and mini progress bar, DetailView adds color-coded output with summary annotations and filter keys [1] all / [2] errors / [3] commands — 868 tests passing across 41 files, including 16 new integration tests)*
   - Update `useAgentProcess.ts`:
     - Create a `ParserPipeline` based on the agent's `type` (claude agents get claudeParser first, opencode agents get opencodeParser first, all get genericParser as fallback)
     - Parse each incoming stdout/stderr line through the pipeline

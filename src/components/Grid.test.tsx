@@ -23,6 +23,8 @@ const makeState = (overrides?: Partial<AgentState>): AgentState => ({
   status: 'idle',
   phase: 'idle',
   output: [],
+  parsedOutput: [],
+  currentActivity: null,
   pid: null,
   startedAt: null,
   error: null,
@@ -234,7 +236,7 @@ describe('Grid', () => {
     const { lastFrame } = render(<Grid agents={agents} focusedAgentId="a1" detailMode={true} />);
     const frame = lastFrame()!;
     expect(frame).toContain('[Escape]');
-    expect(frame).toContain('back to grid');
+    expect(frame).toContain('back');
     expect(frame).toContain('[k]');
     expect(frame).toContain('[r]');
   });

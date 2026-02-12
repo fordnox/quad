@@ -45,7 +45,7 @@ interface AgentRunnerProps {
 }
 
 function AgentRunner({ config, onState, killSignal }: AgentRunnerProps) {
-  const { output, status, pid, run, kill } = useAgentProcess(config);
+  const { output, parsedOutput, currentActivity, status, pid, run, kill } = useAgentProcess(config);
   const startedAtRef = useRef<Date | null>(null);
 
   useEffect(() => {
@@ -65,11 +65,13 @@ function AgentRunner({ config, onState, killSignal }: AgentRunnerProps) {
       status,
       phase: 'idle',
       output,
+      parsedOutput,
+      currentActivity,
       pid,
       startedAt: startedAtRef.current,
       error: status === 'error' ? 'Process exited with error' : null,
     });
-  }, [config, status, output, pid, onState]);
+  }, [config, status, output, parsedOutput, currentActivity, pid, onState]);
 
   // Handle external kill signals
   useEffect(() => {
@@ -109,6 +111,8 @@ export function App() {
       status: state.status,
       phase: state.phase,
       output: state.output,
+      parsedOutput: state.parsedOutput,
+      currentActivity: state.currentActivity,
       pid: state.pid,
       startedAt: state.startedAt,
       error: state.error,

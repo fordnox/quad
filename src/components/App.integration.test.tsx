@@ -93,7 +93,7 @@ describe('App Integration: Interactive Features', () => {
     expect(frame).toContain('Elapsed:');
     // Should show detail view footer
     expect(frame).toContain('[Escape]');
-    expect(frame).toContain('back to grid');
+    expect(frame).toContain('back');
 
     unmount();
   });

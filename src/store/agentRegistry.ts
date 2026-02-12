@@ -8,6 +8,8 @@ function createDefaultState(config: AgentConfig): AgentState {
     status: 'idle',
     phase: 'idle',
     output: [],
+    parsedOutput: [],
+    currentActivity: null,
     pid: null,
     startedAt: null,
     error: null,

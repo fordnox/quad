@@ -22,6 +22,8 @@ function makeAgent(overrides: Partial<AgentState> & { config: AgentConfig }): Ag
     status: 'idle',
     phase: 'idle',
     output: [],
+    parsedOutput: [],
+    currentActivity: null,
     pid: null,
     startedAt: null,
     error: null,

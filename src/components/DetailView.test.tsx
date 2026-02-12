@@ -3,6 +3,7 @@ import React from 'react';
 import { render } from 'ink-testing-library';
 import { DetailView } from './DetailView.js';
 import type { AgentState, AgentConfig } from '../types/agent.js';
+import type { ParsedOutput } from '../parsers/outputParser.js';
 
 const makeConfig = (overrides?: Partial<AgentConfig>): AgentConfig => ({
   id: 'test-1',
@@ -19,6 +20,8 @@ const makeState = (overrides?: Partial<AgentState>): AgentState => ({
   status: 'idle',
   phase: 'idle',
   output: [],
+  parsedOutput: [],
+  currentActivity: null,
   pid: null,
   startedAt: null,
   error: null,
@@ -135,7 +138,7 @@ describe('DetailView', () => {
     const { lastFrame } = render(<DetailView agent={agent} isActive={false} />);
     const frame = lastFrame()!;
     expect(frame).toContain('[Escape]');
-    expect(frame).toContain('back to grid');
+    expect(frame).toContain('back');
     expect(frame).toContain('[k]');
     expect(frame).toContain('kill');
     expect(frame).toContain('[r]');
@@ -211,6 +214,86 @@ describe('DetailView', () => {
 
   it('handles empty output gracefully', () => {
     const agent = makeState({ output: [] });
+    const { lastFrame } = render(<DetailView agent={agent} isActive={false} />);
+    expect(lastFrame()).toBeTruthy();
+  });
+
+  it('shows currentActivity when set', () => {
+    const agent = makeState({ currentActivity: 'Running tests' });
+    const { lastFrame } = render(<DetailView agent={agent} isActive={false} />);
+    expect(lastFrame()).toContain('Running tests');
+  });
+
+  it('shows waiting text when no currentActivity', () => {
+    const agent = makeState({ currentActivity: null });
+    const { lastFrame } = render(<DetailView agent={agent} isActive={false} />);
+    expect(lastFrame()).toContain('waiting...');
+  });
+
+  it('shows ALL filter label by default', () => {
+    const agent = makeState();
+    const { lastFrame } = render(<DetailView agent={agent} isActive={false} />);
+    expect(lastFrame()).toContain('[ALL]');
+  });
+
+  it('renders filter key hints in footer', () => {
+    const agent = makeState();
+    const { lastFrame } = render(<DetailView agent={agent} isActive={false} />);
+    const frame = lastFrame()!;
+    expect(frame).toContain('[1]');
+    expect(frame).toContain('all');
+    expect(frame).toContain('[2]');
+    expect(frame).toContain('errors');
+    expect(frame).toContain('[3]');
+    expect(frame).toContain('commands');
+  });
+
+  it('renders color-coded parsed output lines', () => {
+    const parsed: ParsedOutput[] = [
+      { raw: 'Error: something broke', type: 'error', summary: 'Error: something broke', progress: null, timestamp: new Date() },
+      { raw: '$ npm test', type: 'command', summary: '$ npm test', progress: null, timestamp: new Date() },
+      { raw: 'just text', type: 'unknown', summary: 'just text', progress: null, timestamp: new Date() },
+    ];
+    const agent = makeState({ parsedOutput: parsed });
+    const { lastFrame } = render(<DetailView agent={agent} isActive={false} />);
+    const frame = lastFrame()!;
+    expect(frame).toContain('Error: something broke');
+    expect(frame).toContain('$ npm test');
+    expect(frame).toContain('just text');
+  });
+
+  it('shows parsed summary annotations next to output lines', () => {
+    const parsed: ParsedOutput[] = [
+      { raw: 'Thinking about problem', type: 'status', summary: 'Thinking...', progress: null, timestamp: new Date() },
+    ];
+    const agent = makeState({ parsedOutput: parsed });
+    const { lastFrame } = render(<DetailView agent={agent} isActive={false} />);
+    const frame = lastFrame()!;
+    // Summary should be shown in brackets as an annotation
+    expect(frame).toContain('[Thinking...]');
+  });
+
+  it('falls back to raw output when parsedOutput is empty', () => {
+    const agent = makeState({
+      output: ['raw line 1', 'raw line 2'],
+      parsedOutput: [],
+    });
+    const { lastFrame } = render(<DetailView agent={agent} isActive={false} />);
+    const frame = lastFrame()!;
+    expect(frame).toContain('raw line 1');
+    expect(frame).toContain('raw line 2');
+  });
+
+  it('renders without errors with mixed parsed output types', () => {
+    const types = ['status', 'code', 'command', 'error', 'info', 'progress', 'unknown'] as const;
+    const parsed: ParsedOutput[] = types.map((type) => ({
+      raw: `${type} line`,
+      type,
+      summary: `${type} summary`,
+      progress: type === 'progress' ? { current: 1, total: 5 } : null,
+      timestamp: new Date(),
+    }));
+    const agent = makeState({ parsedOutput: parsed });
     const { lastFrame } = render(<DetailView agent={agent} isActive={false} />);
     expect(lastFrame()).toBeTruthy();
   });

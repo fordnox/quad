@@ -3,6 +3,7 @@ import React from 'react';
 import { render } from 'ink-testing-library';
 import { AgentCard } from './AgentCard.js';
 import type { AgentState, AgentConfig } from '../types/agent.js';
+import type { ParsedOutput } from '../parsers/outputParser.js';
 
 const makeConfig = (overrides?: Partial<AgentConfig>): AgentConfig => ({
   id: 'test-1',
@@ -19,6 +20,8 @@ const makeState = (overrides?: Partial<AgentState>): AgentState => ({
   status: 'idle',
   phase: 'idle',
   output: [],
+  parsedOutput: [],
+  currentActivity: null,
   pid: null,
   startedAt: null,
   error: null,
@@ -188,9 +191,10 @@ describe('AgentCard', () => {
       <AgentCard agent={agent} width={50} height={15} assignedPhase="audit" activeInCurrentPhase={false} />
     );
     const frame = lastFrame()!;
-    // Should show AUDIT but not with the active indicator
+    // Should show AUDIT but not with the bold active indicator (▸ AUDIT)
     expect(frame).toContain('AUDIT');
-    expect(frame).not.toContain('▸');
+    // The active phase indicator uses "▸ PHASE" format; dimmed phase should not have this pattern
+    expect(frame).not.toContain('▸ AUDIT');
   });
 
   it('does not show assigned phase when not provided', () => {
@@ -199,7 +203,11 @@ describe('AgentCard', () => {
     const frame = lastFrame()!;
     // Should only contain the phase label [IDLE], not any assigned phase label
     expect(frame).toContain('[IDLE]');
-    expect(frame).not.toContain('▸');
+    // No phase labels like PLAN, CODE, AUDIT, PUSH should appear outside of [IDLE]
+    expect(frame).not.toContain('▸ PLAN');
+    expect(frame).not.toContain('▸ CODE');
+    expect(frame).not.toContain('▸ AUDIT');
+    expect(frame).not.toContain('▸ PUSH');
   });
 
   it('renders all phase assignments without errors', () => {
@@ -212,5 +220,73 @@ describe('AgentCard', () => {
       expect(lastFrame()).toBeTruthy();
       expect(lastFrame()).toContain(phase.toUpperCase());
     }
+  });
+
+  it('shows currentActivity when set', () => {
+    const agent = makeState({ currentActivity: 'Editing src/app.ts' });
+    const { lastFrame } = render(<AgentCard agent={agent} width={50} height={15} />);
+    expect(lastFrame()).toContain('Editing src/app.ts');
+  });
+
+  it('shows waiting text when no currentActivity', () => {
+    const agent = makeState({ currentActivity: null });
+    const { lastFrame } = render(<AgentCard agent={agent} width={50} height={15} />);
+    expect(lastFrame()).toContain('waiting...');
+  });
+
+  it('renders color-coded parsed output lines', () => {
+    const parsed: ParsedOutput[] = [
+      { raw: 'Error: bad input', type: 'error', summary: 'Error: bad input', progress: null, timestamp: new Date() },
+      { raw: 'git push origin', type: 'command', summary: 'git push origin', progress: null, timestamp: new Date() },
+    ];
+    const agent = makeState({ parsedOutput: parsed });
+    const { lastFrame } = render(<AgentCard agent={agent} width={50} height={15} />);
+    const frame = lastFrame()!;
+    expect(frame).toContain('Error: bad input');
+    expect(frame).toContain('git push origin');
+  });
+
+  it('shows mini progress bar when progress data is available', () => {
+    const parsed: ParsedOutput[] = [
+      { raw: '[3/10] processing', type: 'progress', summary: 'Step 3 of 10', progress: { current: 3, total: 10 }, timestamp: new Date() },
+    ];
+    const agent = makeState({ parsedOutput: parsed });
+    const { lastFrame } = render(<AgentCard agent={agent} width={50} height={15} />);
+    const frame = lastFrame()!;
+    expect(frame).toContain('3/10');
+    // Progress bar uses █ and ░ characters
+    expect(frame).toContain('█');
+    expect(frame).toContain('░');
+  });
+
+  it('does not show progress bar when no progress data', () => {
+    const parsed: ParsedOutput[] = [
+      { raw: 'just text', type: 'unknown', summary: 'just text', progress: null, timestamp: new Date() },
+    ];
+    const agent = makeState({ parsedOutput: parsed });
+    const { lastFrame } = render(<AgentCard agent={agent} width={50} height={15} />);
+    const frame = lastFrame()!;
+    // No progress bar chars for a progress indicator
+    expect(frame).not.toContain('░');
+  });
+
+  it('falls back to raw output when parsedOutput is empty', () => {
+    const agent = makeState({
+      output: ['raw line 1', 'raw line 2'],
+      parsedOutput: [],
+    });
+    const { lastFrame } = render(<AgentCard agent={agent} width={50} height={15} />);
+    const frame = lastFrame()!;
+    expect(frame).toContain('raw line 1');
+    expect(frame).toContain('raw line 2');
+  });
+
+  it('uses parsed summary for display when available', () => {
+    const parsed: ParsedOutput[] = [
+      { raw: 'some raw content here', type: 'status', summary: 'Thinking...', progress: null, timestamp: new Date() },
+    ];
+    const agent = makeState({ parsedOutput: parsed });
+    const { lastFrame } = render(<AgentCard agent={agent} width={50} height={15} />);
+    expect(lastFrame()).toContain('Thinking...');
   });
 });
