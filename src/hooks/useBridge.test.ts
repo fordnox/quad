@@ -38,6 +38,7 @@ function makeAgentState(overrides?: Partial<AgentState> & { config?: AgentConfig
     pid: null,
     startedAt: null,
     error: null,
+    restartCount: 0,
     ...overrides,
   };
 }

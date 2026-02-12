@@ -41,7 +41,7 @@ This phase transforms QUAD from a functional prototype into a polished, configur
     - Add a `"prepublishOnly": "pnpm build"` script
   > Completed: Created `src/cli.tsx` with full argument parsing (--port, --no-api, --no-bridge, --config, --demo, --help/-h, --version/-v), `mergeCliFlags()` for CLI-over-config precedence, and ConfigProvider wrapping. Updated `App.tsx` to accept `noApi`, `noBridge`, `demo` props. Updated `useBridge.ts` to conditionally start API server and job file watcher. Updated `package.json` with `bin`, `main`, `dev`/`start`/`prepublishOnly` scripts. Legacy `app.tsx` delegates to `cli.tsx`. Added `cli.test.tsx` with 21 tests covering all flags, error cases, and mergeCliFlags. All 1136 tests pass.
 
-- [ ] Implement graceful shutdown and error recovery:
+- [x] Implement graceful shutdown and error recovery:
   - In `App.tsx`, register handlers for `SIGINT`, `SIGTERM`, and `uncaughtException`:
     - Kill all running child processes
     - Close the API server
@@ -53,6 +53,7 @@ This phase transforms QUAD from a functional prototype into a polished, configur
     - Track restart count per agent, cap at 3 restarts before marking as `error`
     - Show restart count on the AgentCard: `(restarted 2/3 times)`
   - Add a global error boundary component that catches React render errors and shows a fallback UI instead of crashing the entire TUI
+  > Completed: Added `performShutdown()` to App.tsx with SIGINT/SIGTERM/uncaughtException handlers that kill all running agents and call `exit()`. Added `autoRestart` option to `useAgentProcess` with 3s delay, max 3 restarts, and restart count tracking. Added `restartCount` field to `AgentState` type. AgentCard shows `(restarted N/3 times)` when restartCount > 0. Created `ErrorBoundary` class component wrapping the app in `cli.tsx` with fallback UI on render errors. Added `ErrorBoundary.test.tsx` (5 tests), `GracefulShutdown.test.tsx` (4 tests), and `useAgentProcess.autoRestart.test.tsx` (7 tests). All 1152 tests pass.
 
 - [ ] Add a notification and event log system:
   - Create `src/store/eventLog.ts`:

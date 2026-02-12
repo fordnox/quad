@@ -25,6 +25,7 @@ const makeState = (overrides?: Partial<AgentState>): AgentState => ({
   pid: null,
   startedAt: null,
   error: null,
+  restartCount: 0,
   ...overrides,
 });
 

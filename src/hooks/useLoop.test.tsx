@@ -27,6 +27,7 @@ function makeAgent(overrides: Partial<AgentState> & { config: AgentConfig }): Ag
     pid: null,
     startedAt: null,
     error: null,
+    restartCount: 0,
     ...overrides,
   };
 }

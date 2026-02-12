@@ -19,10 +19,11 @@ interface AgentRunnerProps {
   config: AgentConfig;
   onState: (state: AgentState) => void;
   killSignal?: number;
+  autoRestart?: boolean;
 }
 
-function AgentRunner({ config, onState, killSignal }: AgentRunnerProps) {
-  const { output, parsedOutput, currentActivity, status, pid, run, kill } = useAgentProcess(config);
+function AgentRunner({ config, onState, killSignal, autoRestart = false }: AgentRunnerProps) {
+  const { output, parsedOutput, currentActivity, status, pid, restartCount, run, kill } = useAgentProcess(config, { autoRestart });
   const startedAtRef = useRef<Date | null>(null);
 
   useEffect(() => {
@@ -47,8 +48,9 @@ function AgentRunner({ config, onState, killSignal }: AgentRunnerProps) {
       pid,
       startedAt: startedAtRef.current,
       error: status === 'error' ? 'Process exited with error' : null,
+      restartCount,
     });
-  }, [config, status, output, parsedOutput, currentActivity, pid, onState]);
+  }, [config, status, output, parsedOutput, currentActivity, pid, restartCount, onState]);
 
   // Handle external kill signals
   useEffect(() => {
@@ -77,6 +79,7 @@ export function App({ noApi = false, noBridge = false, demo = false }: AppProps 
   const [showAddForm, setShowAddForm] = useState(false);
   const [killSignals, setKillSignals] = useState<Record<string, number>>({});
   const [runnerConfigs, setRunnerConfigs] = useState<AgentConfig[]>([]);
+  const config = useConfig();
 
   const { loopState, assignments, startLoop, pauseLoop, resumeLoop, resetLoop, onLoopEvent, offLoopEvent } = useLoop(agents);
 
@@ -98,6 +101,47 @@ export function App({ noApi = false, noBridge = false, demo = false }: AppProps 
     noApi,
     noBridge,
   });
+
+  // Graceful shutdown: kill all running child processes and exit cleanly
+  const performShutdown = useCallback(() => {
+    // Send kill signals to all running agents
+    setKillSignals((prev) => {
+      const next = { ...prev };
+      for (const agent of agents) {
+        if (agent.status === 'running') {
+          next[agent.config.id] = (next[agent.config.id] ?? 0) + 1;
+        }
+      }
+      return next;
+    });
+
+    // Exit after a short delay to let kill signals propagate
+    setTimeout(() => {
+      exit();
+    }, 200);
+  }, [agents, exit]);
+
+  // Register handlers for SIGINT, SIGTERM, and uncaughtException
+  useEffect(() => {
+    const handleSignal = () => {
+      performShutdown();
+    };
+
+    const handleUncaughtException = (err: Error) => {
+      process.stderr.write(`[quad] Uncaught exception: ${err.message}\n${err.stack ?? ''}\n`);
+      performShutdown();
+    };
+
+    process.on('SIGINT', handleSignal);
+    process.on('SIGTERM', handleSignal);
+    process.on('uncaughtException', handleUncaughtException);
+
+    return () => {
+      process.removeListener('SIGINT', handleSignal);
+      process.removeListener('SIGTERM', handleSignal);
+      process.removeListener('uncaughtException', handleUncaughtException);
+    };
+  }, [performShutdown]);
 
   // Register demo agents on mount (only in --demo mode)
   const initializedRef = useRef(false);
@@ -121,6 +165,7 @@ export function App({ noApi = false, noBridge = false, demo = false }: AppProps 
       pid: state.pid,
       startedAt: state.startedAt,
       error: state.error,
+      restartCount: state.restartCount,
     });
   }, [updateAgent]);
 
@@ -162,12 +207,15 @@ export function App({ noApi = false, noBridge = false, demo = false }: AppProps 
 
   const agentIds = agents.map((a) => a.config.id);
 
+  // Determine if autoRestart is enabled via config
+  const autoRestartEnabled = config.loop?.autoStart ?? false;
+
   useInput((input, key) => {
     // When the add form is open, don't process other keybindings
     if (showAddForm) return;
 
     if (input === 'q') {
-      exit();
+      performShutdown();
       return;
     }
 
@@ -241,6 +289,7 @@ export function App({ noApi = false, noBridge = false, demo = false }: AppProps 
             config={config}
             onState={handleAgentState}
             killSignal={killSignals[config.id]}
+            autoRestart={autoRestartEnabled}
           />
         ))}
         <AddAgentForm onSubmit={handleAddAgent} onCancel={handleCancelAdd} nextId={nextId} />
@@ -256,6 +305,7 @@ export function App({ noApi = false, noBridge = false, demo = false }: AppProps 
           config={config}
           onState={handleAgentState}
           killSignal={killSignals[config.id]}
+          autoRestart={autoRestartEnabled}
         />
       ))}
       <LoopStatusBar loopState={loopState} />

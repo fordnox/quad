@@ -27,4 +27,5 @@ export interface AgentState {
   pid: number | null;
   startedAt: Date | null;
   error: string | null;
+  restartCount: number;
 }

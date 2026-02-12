@@ -13,6 +13,7 @@ function createDefaultState(config: AgentConfig): AgentState {
     pid: null,
     startedAt: null,
     error: null,
+    restartCount: 0,
   };
 }
 

@@ -7,6 +7,8 @@ import { opencodeParser } from '../parsers/opencodeParser.js';
 import { genericParser } from '../parsers/genericParser.js';
 
 const MAX_OUTPUT_LINES = 200;
+const MAX_RESTARTS = 3;
+const RESTART_DELAY_MS = 3000;
 
 export function createPipelineForType(agentType: AgentType): ParserPipeline {
   switch (agentType) {
@@ -26,18 +28,28 @@ export interface UseAgentProcessResult {
   currentActivity: string | null;
   status: AgentStatus;
   pid: number | null;
+  restartCount: number;
   run: () => void;
   kill: () => void;
 }
 
-export function useAgentProcess(config: AgentConfig): UseAgentProcessResult {
+export interface UseAgentProcessOptions {
+  autoRestart?: boolean;
+}
+
+export function useAgentProcess(config: AgentConfig, options: UseAgentProcessOptions = {}): UseAgentProcessResult {
+  const { autoRestart = false } = options;
   const [output, setOutput] = useState<string[]>([]);
   const [parsedOutput, setParsedOutput] = useState<ParsedOutput[]>([]);
   const [currentActivity, setCurrentActivity] = useState<string | null>(null);
   const [status, setStatus] = useState<AgentStatus>('idle');
   const [pid, setPid] = useState<number | null>(null);
+  const [restartCount, setRestartCount] = useState(0);
   const childRef = useRef<ChildProcess | null>(null);
   const killedRef = useRef(false);
+  const restartCountRef = useRef(0);
+  const restartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const unmountedRef = useRef(false);
 
   const pipeline = useMemo(() => createPipelineForType(config.type), [config.type]);
 
@@ -64,13 +76,10 @@ export function useAgentProcess(config: AgentConfig): UseAgentProcessResult {
     });
   }, [pipeline]);
 
-  const run = useCallback(() => {
+  const startProcess = useCallback(() => {
     if (childRef.current) return;
 
     setStatus('running');
-    setOutput([]);
-    setParsedOutput([]);
-    setCurrentActivity(null);
     killedRef.current = false;
 
     const child = spawn(config.command, config.args, { shell: true });
@@ -87,18 +96,72 @@ export function useAgentProcess(config: AgentConfig): UseAgentProcessResult {
 
     child.on('close', (code) => {
       childRef.current = null;
-      if (killedRef.current) return;
-      setStatus(code === 0 ? 'finished' : 'error');
+      if (killedRef.current || unmountedRef.current) return;
+
+      if (code !== 0) {
+        // Check if we should auto-restart
+        if (autoRestart && restartCountRef.current < MAX_RESTARTS) {
+          restartCountRef.current++;
+          setRestartCount(restartCountRef.current);
+          appendOutput(`Process exited with code ${code}. Restarting in ${RESTART_DELAY_MS / 1000}s (${restartCountRef.current}/${MAX_RESTARTS})...`);
+          setStatus('idle');
+
+          restartTimerRef.current = setTimeout(() => {
+            if (!unmountedRef.current && !killedRef.current) {
+              startProcess();
+            }
+          }, RESTART_DELAY_MS);
+          return;
+        }
+        setStatus('error');
+      } else {
+        setStatus('finished');
+      }
     });
 
     child.on('error', (err) => {
       childRef.current = null;
-      setStatus('error');
+      if (unmountedRef.current) return;
+
       appendOutput(`Error: ${err.message}`);
+
+      // Check if we should auto-restart on spawn error too
+      if (autoRestart && restartCountRef.current < MAX_RESTARTS) {
+        restartCountRef.current++;
+        setRestartCount(restartCountRef.current);
+        appendOutput(`Restarting in ${RESTART_DELAY_MS / 1000}s (${restartCountRef.current}/${MAX_RESTARTS})...`);
+        setStatus('idle');
+
+        restartTimerRef.current = setTimeout(() => {
+          if (!unmountedRef.current && !killedRef.current) {
+            startProcess();
+          }
+        }, RESTART_DELAY_MS);
+        return;
+      }
+      setStatus('error');
     });
-  }, [config.command, config.args, appendOutput]);
+  }, [config.command, config.args, appendOutput, autoRestart]);
+
+  const run = useCallback(() => {
+    if (childRef.current) return;
+    setOutput([]);
+    setParsedOutput([]);
+    setCurrentActivity(null);
+    restartCountRef.current = 0;
+    setRestartCount(0);
+    startProcess();
+  }, [startProcess]);
 
   const kill = useCallback(() => {
+    // Cancel any pending restart
+    if (restartTimerRef.current) {
+      clearTimeout(restartTimerRef.current);
+      restartTimerRef.current = null;
+      killedRef.current = true;
+      setStatus('finished');
+    }
+
     if (childRef.current) {
       killedRef.current = true;
       childRef.current.kill('SIGTERM');
@@ -109,6 +172,14 @@ export function useAgentProcess(config: AgentConfig): UseAgentProcessResult {
 
   useEffect(() => {
     return () => {
+      unmountedRef.current = true;
+
+      // Cancel any pending restart
+      if (restartTimerRef.current) {
+        clearTimeout(restartTimerRef.current);
+        restartTimerRef.current = null;
+      }
+
       if (childRef.current) {
         childRef.current.kill('SIGTERM');
         childRef.current = null;
@@ -116,5 +187,5 @@ export function useAgentProcess(config: AgentConfig): UseAgentProcessResult {
     };
   }, []);
 
-  return { output, parsedOutput, currentActivity, status, pid, run, kill };
+  return { output, parsedOutput, currentActivity, status, pid, restartCount, run, kill };
 }

@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import React from 'react';
 import { render } from 'ink';
 import { App } from './components/App.js';
+import { ErrorBoundary } from './components/ErrorBoundary.js';
 import { AgentRegistryProvider } from './store/AgentRegistryProvider.js';
 import { ConfigProvider } from './config/ConfigProvider.js';
 import { loadConfig } from './config/loader.js';
@@ -184,10 +185,12 @@ if (isDirectRun) {
   const resolvedConfig = mergeCliFlags(config, flags);
 
   render(
-    <ConfigProvider config={resolvedConfig}>
-      <AgentRegistryProvider>
-        <App noApi={flags.noApi} noBridge={flags.noBridge} demo={flags.demo} />
-      </AgentRegistryProvider>
-    </ConfigProvider>
+    <ErrorBoundary>
+      <ConfigProvider config={resolvedConfig}>
+        <AgentRegistryProvider>
+          <App noApi={flags.noApi} noBridge={flags.noBridge} demo={flags.demo} />
+        </AgentRegistryProvider>
+      </ConfigProvider>
+    </ErrorBoundary>
   );
 }

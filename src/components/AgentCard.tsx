@@ -75,7 +75,7 @@ function renderProgressBar(current: number, total: number, width: number): strin
 }
 
 export function AgentCard({ agent, width, height, focused = false, assignedPhase = null, activeInCurrentPhase = false }: AgentCardProps) {
-  const { config, status, phase, output, parsedOutput, currentActivity, pid, startedAt } = agent;
+  const { config, status, phase, output, parsedOutput, currentActivity, pid, startedAt, restartCount } = agent;
 
   const cardWidth = width ?? Math.floor((process.stdout.columns || 80) / 2);
   const cardHeight = height ?? Math.floor((process.stdout.rows || 24) / 2);
@@ -144,6 +144,7 @@ export function AgentCard({ agent, width, height, focused = false, assignedPhase
           {phaseLabel}
         </Text>
         {assignedPhaseLabel ? <Text>{assignedPhaseLabel}</Text> : null}
+        {restartCount > 0 ? <Text color="yellow">(restarted {restartCount}/3 times)</Text> : null}
       </Box>
 
       {/* Current Activity */}
