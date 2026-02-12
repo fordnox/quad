@@ -3,12 +3,16 @@
   "version": "1.0.0",
   "description": "Quad — a Maestro-managed multi-agent TUI",
   "type": "module",
-  "main": "dist/app.js",
+  "main": "dist/cli.js",
+  "bin": {
+    "quad": "./dist/cli.js"
+  },
   "scripts": {
-    "dev": "tsx src/app.tsx",
+    "dev": "tsx src/cli.tsx --demo",
     "build": "tsc",
-    "start": "node dist/app.js",
-    "test": "vitest run"
+    "start": "node dist/cli.js",
+    "test": "vitest run",
+    "prepublishOnly": "pnpm build"
   },
   "keywords": [],
   "author": "",

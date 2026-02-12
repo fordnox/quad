@@ -11,6 +11,7 @@ import { useLoop } from '../hooks/useLoop.js';
 import { useFocus } from '../hooks/useFocus.js';
 import { useBridge } from '../hooks/useBridge.js';
 import { useAgentRegistry } from '../store/AgentRegistryProvider.js';
+import { useConfig } from '../config/ConfigProvider.js';
 import type { AgentConfig, AgentState } from '../types/agent.js';
 import { demoConfigs } from '../utils/demoAgents.js';
 
@@ -59,7 +60,16 @@ function AgentRunner({ config, onState, killSignal }: AgentRunnerProps) {
   return null;
 }
 
-export function App() {
+export interface AppProps {
+  /** Disable the HTTP API server. */
+  noApi?: boolean;
+  /** Disable the job file watcher. */
+  noBridge?: boolean;
+  /** Start with demo agents for testing. */
+  demo?: boolean;
+}
+
+export function App({ noApi = false, noBridge = false, demo = false }: AppProps = {}) {
   const { exit } = useApp();
   const { isRawModeSupported } = useStdin();
   const { agents, addAgent, updateAgent, removeAgent } = useAgentRegistry();
@@ -85,19 +95,21 @@ export function App() {
     pauseLoop,
     resetLoop,
     onAgentAdded: handleBridgeAgentAdded,
+    noApi,
+    noBridge,
   });
 
-  // Register demo agents on mount
+  // Register demo agents on mount (only in --demo mode)
   const initializedRef = useRef(false);
   useEffect(() => {
-    if (!initializedRef.current) {
+    if (!initializedRef.current && demo) {
       initializedRef.current = true;
       for (const config of demoConfigs) {
         addAgent(config);
         setRunnerConfigs((prev) => [...prev, config]);
       }
     }
-  }, [addAgent]);
+  }, [addAgent, demo]);
 
   const handleAgentState = useCallback((state: AgentState) => {
     updateAgent(state.config.id, {

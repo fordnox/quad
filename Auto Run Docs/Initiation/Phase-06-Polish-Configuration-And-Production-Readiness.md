@@ -24,7 +24,7 @@ This phase transforms QUAD from a functional prototype into a polished, configur
   - Create a React context `ConfigProvider` that makes the config available to all components
   > Completed: Created `schema.ts` (QuadConfig interface + DEFAULT_CONFIG), `loader.ts` (loadConfig/saveConfig with deep merge, validation, ~ expansion, auto-init of ~/.quad/), `ConfigProvider.tsx` (React context + useConfig hook), and `loader.test.ts` (12 tests covering defaults, merging, deep merge, invalid JSON, round-trip, ~ expansion). All 1013 tests pass.
 
-- [ ] Create a proper CLI entry point in `src/cli.ts`:
+- [x] Create a proper CLI entry point in `src/cli.ts`:
   - Parse command-line arguments using a minimal argument parser (no external dependency — use `process.argv` slicing):
     - `--port <number>` — override API port
     - `--no-api` — disable the API server
@@ -39,6 +39,7 @@ This phase transforms QUAD from a functional prototype into a polished, configur
     - Add `"bin": { "quad": "./dist/cli.js" }`
     - Update scripts: `"dev": "tsx src/cli.ts --demo"`, `"start": "node dist/cli.js"`
     - Add a `"prepublishOnly": "pnpm build"` script
+  > Completed: Created `src/cli.tsx` with full argument parsing (--port, --no-api, --no-bridge, --config, --demo, --help/-h, --version/-v), `mergeCliFlags()` for CLI-over-config precedence, and ConfigProvider wrapping. Updated `App.tsx` to accept `noApi`, `noBridge`, `demo` props. Updated `useBridge.ts` to conditionally start API server and job file watcher. Updated `package.json` with `bin`, `main`, `dev`/`start`/`prepublishOnly` scripts. Legacy `app.tsx` delegates to `cli.tsx`. Added `cli.test.tsx` with 21 tests covering all flags, error cases, and mergeCliFlags. All 1136 tests pass.
 
 - [ ] Implement graceful shutdown and error recovery:
   - In `App.tsx`, register handlers for `SIGINT`, `SIGTERM`, and `uncaughtException`:

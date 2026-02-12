@@ -11,7 +11,7 @@ function wait(ms: number): Promise<void> {
 function renderApp() {
   return render(
     <AgentRegistryProvider>
-      <App />
+      <App demo />
     </AgentRegistryProvider>
   );
 }

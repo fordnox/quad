@@ -26,6 +26,10 @@ export interface UseBridgeDeps {
   resetLoop: () => void;
   /** Callback to also mount an AgentRunner for a newly added agent. */
   onAgentAdded?: (config: AgentConfig) => void;
+  /** Disable the HTTP API server. */
+  noApi?: boolean;
+  /** Disable the job file watcher. */
+  noBridge?: boolean;
 }
 
 /**
@@ -123,33 +127,37 @@ export function useBridge(deps: UseBridgeDeps): UseBridgeResult {
       resetLoop: () => depsRef.current.resetLoop(),
     };
 
-    // Start API server
-    createApiServer(bridge).then((handle) => {
-      if (cancelled) {
-        handle.close();
-        return;
+    // Start API server (unless disabled via --no-api)
+    if (!depsRef.current.noApi) {
+      createApiServer(bridge).then((handle) => {
+        if (cancelled) {
+          handle.close();
+          return;
+        }
+        serverRef.current = handle;
+        setApiPort(handle.port);
+
+        // Poll request count from the handle
+        pollRef.current = setInterval(() => {
+          setApiRequestCount(handle.requestCount);
+        }, 1000);
+      }).catch((err) => {
+        process.stderr.write(
+          `[quad-bridge] Failed to start API server: ${err instanceof Error ? err.message : String(err)}\n`,
+        );
+      });
+    }
+
+    // Initialize and watch the job file (unless disabled via --no-bridge)
+    if (!depsRef.current.noBridge) {
+      try {
+        initJobFile(jobFilePath);
+        watcherRef.current = watchJobFile(jobFilePath, handleJobsChange);
+      } catch (err) {
+        process.stderr.write(
+          `[quad-bridge] Failed to start job file watcher: ${err instanceof Error ? err.message : String(err)}\n`,
+        );
       }
-      serverRef.current = handle;
-      setApiPort(handle.port);
-
-      // Poll request count from the handle
-      pollRef.current = setInterval(() => {
-        setApiRequestCount(handle.requestCount);
-      }, 1000);
-    }).catch((err) => {
-      process.stderr.write(
-        `[quad-bridge] Failed to start API server: ${err instanceof Error ? err.message : String(err)}\n`,
-      );
-    });
-
-    // Initialize and watch the job file
-    try {
-      initJobFile(jobFilePath);
-      watcherRef.current = watchJobFile(jobFilePath, handleJobsChange);
-    } catch (err) {
-      process.stderr.write(
-        `[quad-bridge] Failed to start job file watcher: ${err instanceof Error ? err.message : String(err)}\n`,
-      );
     }
 
     return () => {
